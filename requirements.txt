@@ -1,0 +1,80 @@
+absl-py @ file:///tmp/easybuild-build/TensorFlow/2.5.0/fosscuda-2020b/abslpy/absl-py-0.12.0
+astor @ file:///tmp/easybuild-build/TensorFlow/2.5.0/fosscuda-2020b/astor/astor-0.8.1
+asttokens==2.2.1
+astunparse @ file:///tmp/easybuild-build/TensorFlow/2.5.0/fosscuda-2020b/astunparse/astunparse-1.6.3
+backcall==0.2.0
+bokeh==3.0.3
+Bottleneck @ file:///tmp/easybuild-build/SciPybundle/2020.11/fosscuda-2020b/Bottleneck/Bottleneck-1.3.2
+cachetools @ file:///tmp/easybuild-build/TensorFlow/2.5.0/fosscuda-2020b/cachetools/cachetools-4.2.2
+contourpy==1.0.7
+cycler==0.11.0
+deap @ file:///tmp/easybuild-build/SciPybundle/2020.11/fosscuda-2020b/deap/deap-1.3.1
+decorator==5.1.1
+dill @ file:///tmp/easybuild-build/TensorFlow/2.5.0/fosscuda-2020b/dill/dill-0.3.3
+executing==1.2.0
+flatbuffers @ file:///tmp/easybuild-build/flatbufferspython/1.12/GCCcore-10.2.0/flatbuffers-1.12
+fonttools==4.38.0
+gast @ file:///tmp/easybuild-build/TensorFlow/2.5.0/fosscuda-2020b/gast/gast-0.4.0
+google-auth @ file:///tmp/easybuild-build/TensorFlow/2.5.0/fosscuda-2020b/googleauth/google-auth-1.30.0
+google-auth-oauthlib @ file:///tmp/easybuild-build/TensorFlow/2.5.0/fosscuda-2020b/googleauthoauthlib/google-auth-oauthlib-0.4.4
+google-pasta @ file:///tmp/easybuild-build/TensorFlow/2.5.0/fosscuda-2020b/googlepasta/google-pasta-0.2.0
+grpcio @ file:///tmp/easybuild-build/TensorFlow/2.5.0/fosscuda-2020b/grpcio/grpcio-1.34.1
+gviz-api @ file:///tmp/easybuild-build/TensorFlow/2.5.0/fosscuda-2020b/gvizapi/gviz_api-1.9.0
+h5py @ file:///tmp/easybuild-build/h5py/3.1.0/fosscuda-2020b/h5py-3.1.0
+importlib-resources==5.12.0
+ipython==8.10.0
+jedi==0.18.2
+Jinja2==3.1.2
+keras-nightly @ file:///software/easybuild-share/sources/t/TensorFlow/extensions/keras_nightly-2.5.0.dev2021032900-py2.py3-none-any.whl
+Keras-Preprocessing @ file:///tmp/easybuild-build/TensorFlow/2.5.0/fosscuda-2020b/Keras_Preprocessing/Keras_Preprocessing-1.1.2
+kiwisolver==1.4.4
+Markdown @ file:///tmp/easybuild-build/TensorFlow/2.5.0/fosscuda-2020b/Markdown/Markdown-3.3.4
+MarkupSafe==2.1.2
+matplotlib==3.6.0
+matplotlib-inline==0.1.6
+mpi4py @ file:///tmp/easybuild-build/SciPybundle/2020.11/fosscuda-2020b/mpi4py/mpi4py-3.0.3
+mpmath @ file:///tmp/easybuild-build/SciPybundle/2020.11/fosscuda-2020b/mpmath/mpmath-1.1.0
+numexpr @ file:///tmp/easybuild-build/SciPybundle/2020.11/fosscuda-2020b/numexpr/numexpr-2.7.1
+numpy @ file:///tmp/easybuild-build/SciPybundle/2020.11/fosscuda-2020b/numpy/numpy-1.19.4
+oauthlib @ file:///tmp/easybuild-build/TensorFlow/2.5.0/fosscuda-2020b/oauthlib/oauthlib-3.1.0
+opt-einsum @ file:///tmp/easybuild-build/TensorFlow/2.5.0/fosscuda-2020b/opt_einsum/opt_einsum-3.3.0
+packaging==23.0
+pandas @ file:///tmp/easybuild-build/SciPybundle/2020.11/fosscuda-2020b/pandas/pandas-1.1.4
+parso==0.8.3
+pexpect==4.8.0
+pickleshare==0.7.5
+Pillow==9.4.0
+portpicker @ file:///tmp/easybuild-build/TensorFlow/2.5.0/fosscuda-2020b/portpicker/portpicker-1.3.1
+prompt-toolkit==3.0.37
+protobuf @ file:///tmp/easybuild-build/protobufpython/3.14.0/GCCcore-10.2.0/protobuf-3.14.0
+ptyprocess==0.7.0
+pure-eval==0.2.2
+pyarrow==11.0.0
+pyasn1-modules @ file:///tmp/easybuild-build/TensorFlow/2.5.0/fosscuda-2020b/pyasn1modules/pyasn1-modules-0.2.8
+pybind11 @ file:///tmp/easybuild-build/pybind11/2.6.0/GCCcore-10.2.0/pybind11-2.6.0
+Pygments==2.14.0
+pyparsing==3.0.9
+python-dateutil==2.8.2
+pytz==2022.7.1
+PyYAML==6.0
+requests-oauthlib @ file:///tmp/easybuild-build/TensorFlow/2.5.0/fosscuda-2020b/requestsoauthlib/requests-oauthlib-1.3.0
+rsa @ file:///tmp/easybuild-build/TensorFlow/2.5.0/fosscuda-2020b/rsa/rsa-4.7.2
+scipy @ file:///tmp/easybuild-build/SciPybundle/2020.11/fosscuda-2020b/scipy/scipy-1.5.4
+six==1.16.0
+stack-data==0.6.2
+tblib @ file:///tmp/easybuild-build/TensorFlow/2.5.0/fosscuda-2020b/tblib/tblib-1.7.0
+tensorboard @ file:///software/easybuild-share/sources/t/TensorFlow/extensions/tensorboard-2.5.0-py3-none-any.whl
+tensorboard-data-server @ file:///software/easybuild-share/sources/t/TensorFlow/extensions/tensorboard_data_server-0.6.1-py3-none-any.whl
+tensorboard-plugin-profile @ file:///tmp/easybuild-build/TensorFlow/2.5.0/fosscuda-2020b/tensorboard_plugin_profile/tensorboard_plugin_profile-2.4.0
+tensorboard-plugin-wit @ file:///software/easybuild-share/sources/t/TensorFlow/extensions/tensorboard_plugin_wit-1.8.0-py3-none-any.whl
+tensorflow @ file:///tmp/easybuild-build/TensorFlow/2.5.0/fosscuda-2020b/tensorflow-2.5.0-cp38-cp38-linux_x86_64.whl
+tensorflow-estimator @ file:///software/easybuild-share/sources/t/TensorFlow/extensions/tensorflow_estimator-2.5.0-py2.py3-none-any.whl
+termcolor @ file:///tmp/easybuild-build/TensorFlow/2.5.0/fosscuda-2020b/termcolor/termcolor-1.1.0
+tornado==6.2
+traitlets==5.9.0
+typing-extensions @ file:///tmp/easybuild-build/typingextensions/3.7.4.3/GCCcore-10.2.0/typing_extensions-3.7.4.3
+wcwidth==0.2.6
+Werkzeug @ file:///tmp/easybuild-build/TensorFlow/2.5.0/fosscuda-2020b/Werkzeug/Werkzeug-2.0.0
+wrapt @ file:///tmp/easybuild-build/TensorFlow/2.5.0/fosscuda-2020b/wrapt/wrapt-1.12.1
+xyzservices==2023.2.0
+zipp==3.14.0

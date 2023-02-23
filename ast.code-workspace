@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "/home/schmidle/code/anomaly_selection_tool"
+		},
+		{
+			"path": "../../../../data/isewer"
+		}
+	],
+	"settings": {
+		"python.defaultInterpreterPath": "/home/schmidle/VirtualEnvs/anomaly_selection_tool/bin/ipython3"
+	}
+}

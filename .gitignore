@@ -1,0 +1,8 @@
+.python-version
+data/
+plots*/
+results/
+.gitignore~
+*.DS_Store
+*ipynb_checkpoints*
+__pycache__/
