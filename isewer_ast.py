@@ -6,32 +6,34 @@ from bokeh.layouts import column, row
 from bokeh.models.tools import HoverTool
 from bokeh.models import ColumnDataSource, RangeTool, CustomJS, MultiChoice
 from bokeh.palettes import Category20
+
 import itertools
 
 
 ### TO DO
 # - drop NAs of each column on the fly so that lines actually get connected. I.E. different xs for each column
 
-PATH_MWE = "/data/isewer/data/Prozessdaten_Acron_20220803.feather"
+PATH = "/data/isewer/data/012_split_by_year_month/2021_05_Prozessdaten_Acron_20220803.feather"
 
 #read_cols = ["DateTime", "DaylightSavingTime"]+ col
-data_raw = pd.read_feather(PATH_MWE)#columns=read_cols
+data_raw = pd.read_feather(PATH)#columns=read_cols
 # all_str = data_raw.columns.str.contains("_type")
 # data_raw = data_raw.loc[:,~all_str]
 print("data loaded") 
 
 
-from bokeh.io import show
-from bokeh.models import CustomJS, MultiChoice
+
+def callback0 (attrname, old, new):
+    print("Bkub")
+
+
 
 OPTIONS0 = ["Niveau_RÜ_BerlinerAllee","Niveau_RÜ_Uferstraße","Niveau_RÜ_Hindenburgstraße","Niveau_RÜ_Vogesenstraße"]
 OPTIONS1 = data_raw.columns[data_raw.columns.str.contains("Niederschlag")].to_list()
 
 # Berliner Strang variables
 multi_choice0 = MultiChoice(value=["Niveau_RÜ_BerlinerAllee","Niveau_RÜ_Uferstraße"], options=OPTIONS0)
-multi_choice0.js_on_change("value", CustomJS(code="""
-    console.log('multi_choice: value=' + this.value, this.toString())
-"""))
+multi_choice0.on_change("value", callback0)
 # NSM Variables
 multi_choice1 = MultiChoice(value=OPTIONS1[:3], options=OPTIONS1)
 multi_choice1.js_on_change("value", CustomJS(code="""
@@ -39,13 +41,15 @@ multi_choice1.js_on_change("value", CustomJS(code="""
 """))
 
 
+
 #columns
 cols = [multi_choice0.value,multi_choice1.value]
 n_cols=[len(cols[0]),len(cols[1])]
 
 # create subset, cols + Datetime
-loadcols = [item for sublist in cols for item in sublist]
-data = data_raw.loc[:,loadcols+["DateTime"]].dropna(how="all").copy()
+# all cols available in plot
+loadcols = OPTIONS0 + OPTIONS1 + ["DateTime"]
+data = data_raw.loc[:,loadcols].dropna(how="all").copy()
 #data = data_raw
 data.DateTime = pd.to_datetime(data.DateTime)# no need to set format because done in "011_load_to_feather.py"
 
@@ -68,14 +72,14 @@ source = ColumnDataSource(data)
 print("created datasource")
 
 TOOLS = "pan,xpan,box_zoom,wheel_zoom,box_select,lasso_select,reset"
-WIDTH, HEIGHT = 900,400
+WIDTH, HEIGHT = 1500,350
 n_plots = 2
 # Basic plot setup
 #ps = [figure(width=WIDTH, height=HEIGHT, x_axis_type="datetime", title='',tools=TOOLS) for i in range(n_plots)]
 ps = [[],[]]
 xleft = data.DateTime[0]
 xright = data.DateTime[10000]
-ps[0] = figure(width=WIDTH, height=HEIGHT, x_axis_type="datetime", title='',tools=TOOLS,x_range=(xleft,xright))
+ps[0] = figure(width=WIDTH, height=HEIGHT, x_axis_type="datetime", title='',tools=TOOLS,x_range=(xleft,xright), active_drag="pan", active_scroll="wheel_zoom")
 ps[1] = figure(width=WIDTH, height=HEIGHT, x_axis_type="datetime", title='',tools=TOOLS, x_range=ps[0].x_range, y_range=ps[0].y_range)
 
 
@@ -89,10 +93,12 @@ ps[1] = figure(width=WIDTH, height=HEIGHT, x_axis_type="datetime", title='',tool
 
 crs = [[],[]]
 for h in range(n_plots):
-    ps[h].vline_stack(cols[h], x='DateTime', source=source)
+    #ps[h].vline_stack(cols[h], x='DateTime', source=source)
     for i in range(n_cols[h]):
+        loopcolor=next(colors)
+        ps[h].line(x='DateTime', y=cols[h][i], color=loopcolor, source=source)
         cr = ps[h].circle(x='DateTime', y=cols[h][i], size=5,
-                    fill_color=next(colors), hover_fill_color="firebrick",
+                    fill_color=loopcolor, hover_fill_color="firebrick",
                     fill_alpha=0.7, hover_alpha=0.95,
                     line_color=None, hover_line_color="white", legend_label=cols[h][i], name=cols[h][i], source=source)
         crs[h].append(cr)
@@ -102,7 +108,7 @@ for h in range(n_plots):
     ps[h].legend.location = "top_left"
     ps[h].legend.click_policy="hide"
 
-select = figure(height=150, width=WIDTH, x_axis_type="datetime", title="", y_axis_type=None, tools="", toolbar_location=None)#
+select = figure(height=100, width=WIDTH, x_axis_type="datetime", title="", y_axis_type=None, tools="", toolbar_location=None)#
 
 range_tool = RangeTool(x_range=ps[0].x_range)#
 range_tool.overlay.fill_color = "navy"
@@ -119,8 +125,50 @@ select.toolbar.active_multi = range_tool
 
 # put the button and plot in a layout and add to the document
 curdoc().add_root(column(multi_choice0, ps[0],multi_choice1, ps[1],select))
+curdoc().title = "i-SEWER Anomaly Selection Tool"
 
 
+### UPDATE DATA SOURCE WHEN CHOOSING OTHER MONTH
+#--> see CML
+# def update(selected=None):
+#     cml_id = ticker2.value
+#     month = ticker1.value
+#     data, meta = get_data(cml_id, month)
+#     source.data = data
+#     source_static.data = data
+
+
+### Am nächsten dran:
+#   https://stackoverflow.com/questions/38038432/bokeh-interactively-changing-the-columns-being-plotted
+
+### Am vielversprechendsten: Alle plotts, aber nicht alle visible
+#https://stackoverflow.com/questions/69462392/hide-several-lines-using-checkboxes-and-customjs-in-python-bokeh
+#inkl Legende
+#https://discourse.bokeh.org/t/confusion-on-customjs-for-filtering-with-multichoice/8830
+
+
+# f you just have one simple plot with a legend then you can probably:
+
+# remove the associated GlyphRenderer from p.renderers
+# delete the corresponding LegendItem from the Legend
+
+### CHANGE COLOR USING JSCallback
+#https://stackoverflow.com/questions/48451710/bokeh-can-only-update-column-via-callback-once
+
+
+### Change Glyph field JSCallback
+#https://stackoverflow.com/questions/56518957/bokeh-python-how-to-change-data-columns-in-customjs-callback
+#r = p.line(x='x', y='foo' source=source)
+# cb = CustomJS(args=dict(r=r, select=select), code="""
+#     // tell the glyph which field of the source y should refer to
+#     r.glyph.y.field = select.value
+
+#     // manually trigger change event to re-render
+#     r.glyph.change.emit()
+# """)
+
+
+#You need to pass a ColumnDataSource with the data as a second argument to to p.add_glyph. The field specifications are references to columns in a CDS. All that said, a much better approach in general would be add all the glyphs up front and use the select callback to toggle their visibility as appropriate.
 
 
 # import matplotlib.pyplot as plt

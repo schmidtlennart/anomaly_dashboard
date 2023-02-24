@@ -5,6 +5,9 @@
 		},
 		{
 			"path": "../../../../data/isewer"
+		},
+		{
+			"path": "../kit_anomaly_selection_tool"
 		}
 	],
 	"settings": {
