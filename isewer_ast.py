@@ -5,8 +5,10 @@ import numpy as np
 from bokeh.plotting import figure, curdoc, show
 from bokeh.layouts import column, row
 from bokeh.models.tools import HoverTool
-from bokeh.models import ColumnDataSource, RangeTool, CustomJS, MultiChoice, Select, MultiSelect, Spacer, Button
+from bokeh.models import ColumnDataSource, RangeTool, CustomJS, MultiChoice, Select, MultiSelect, Spacer, Button, CheckboxButtonGroup
 from bokeh.palettes import Turbo256#Category20
+
+from isewer_ast.callbacks import *
 
 ### TO DO
 # - clear-all button for list selects
@@ -24,55 +26,11 @@ for file in sorted(os.listdir(DATADIR)):
 INITIAL_FILE = "2022_04"
 
 #new="2022_05"
-### WIDGET CALLBACKS
-def callback_new_data(attrname, old, new):
-    print("updating data..")
-    ### Load new data
-    data = pd.read_feather(FILES[new])#columns=read_cols
-    print("data loaded") 
-    data.DateTime = pd.to_datetime(data.DateTime)# no need to set format because done in "011_load_to_feather.py"
-    source.data = data# use from_df?
-    print("updated datasource")
-    # update xlim of first plot (rest follows)
-    ps[0].x_range.update(start=data.DateTime[0], end = data.DateTime[10000])
-    print("updated plot limits")
-    #plot_all(ps, source)#does not help
-
-def callback_new_cols0 (attrname, old, new):
-    # redraw plot 0 based on column selection
-    cols = new + multi_list0.value
-    draw_plot(ps[0], cols ,source,COLORS, ptype="circle")
-
-def callback_new_cols1 (attrname, old, new):
-    # redraw plot 2 based on columns selection
-    cols = new + multi_list1.value
-    draw_plot(ps[1], cols ,source,COLORS, ptype="bar")
-
-def callback_multi_list0 (attrname, old, new):
-    # add more cols to multichoice0.value & plot 0 redraw
-    cols = multi_choice0.value + new
-    draw_plot(ps[0], cols ,source,COLORS, ptype="circle")  
-
-def callback_multi_list1 (attrname, old, new):
-    # add more cols to multichoice1.value & plot 1 redraw
-    cols = multi_choice1.value + new
-    draw_plot(ps[1], cols ,source,COLORS, ptype="bar")  
-
-def callback_button0():
-    # empty multilist and replot only multicolumn selections
-    multi_list0.value = []
-    draw_plot(ps[0], multi_choice0.value ,source,COLORS, ptype="circle")
-
-def callback_button1():
-    # empty multilist and replot only multicolumn selections
-    multi_list1.value = []
-    draw_plot(ps[1], multi_choice1.value ,source,COLORS, ptype="bar")
-
 
 ### SET UP WIDGETS #1
 ### Dropdown to choose year
 select0 = Select(title="Year/Month", value=INITIAL_FILE, options=list(FILES.keys()))#value=list(FILES.keys())[0]
-select0.on_change("value",callback_new_data)
+select0.on_change("value",cb_new_data)
 
 ### CREATE DATASOURCE
 data = pd.read_feather(FILES[select0.value])#columns=read_cols
@@ -94,23 +52,39 @@ OPTIONS1 = sorted(data.columns[data.columns.str.contains("Niederschlag")].to_lis
 MULTI_LIST_WIDTH = 220
 # Berliner Strang variables
 multi_choice0 = MultiChoice(value=["Niveau_RÜ_BerlinerAllee","Niveau_RÜ_Uferstraße"], options=OPTIONS0)
-multi_choice0.on_change("value", callback_new_cols0)
+multi_choice0.on_change("value", cb_new_cols0)
 # NSM Variables
 multi_choice1 = MultiChoice(value=["Niederschlag_Schwarzer_Steg", 'Niederschlag_Clara_Immerwahr_Straße', 'Niederschlag_Günterstal'], options=OPTIONS1)
-multi_choice1.on_change("value", callback_new_cols1)
+multi_choice1.on_change("value", cb_new_cols1)
 # Additional variables plot 1
 multi_list0 =  MultiSelect(options=sorted(all_cols), title="Strg+Click to deselect", size=23, width=MULTI_LIST_WIDTH)
-multi_list0.on_change("value", callback_multi_list0)
+multi_list0.on_change("value", cb_multi_list0)
 # Additional variables plot 2
 multi_list1 =  MultiSelect(options=sorted(all_cols), size=23, width=MULTI_LIST_WIDTH)
-multi_list1.on_change("value", callback_multi_list1)
+multi_list1.on_change("value", cb_multi_list1)
 # Emptying multilist0
 button0 = Button(label="clear")
-button0.on_event('button_click', callback_button0)
-
+button0.on_event('button_click', cb_button0)
 # Emptying multilist1
 button1 = Button(label="clear")
-button1.on_event('button_click', callback_button1)
+button1.on_event('button_click', cb_button1)
+# Selection for flagging
+source.selected.on_change('indices', cb_selection_change)
+# FLag buttons
+button1 = Button(label="Save flags", button_type="success", height=25)
+# button2 = Button(label="Delete all flags", button_type="success", height=25)
+# button2a = Button(label="Delete selected type of flags", button_type="success", height=25)
+# button2b = Button(label="Delete flags in current selection", button_type="success", height=25)
+button3 = Button(label="Flag period", button_type="success", height=25)
+LABELS = ["Sensor Anomaly", "System Anomaly", "Other"]
+checkbox_button_group = CheckboxButtonGroup(labels=LABELS, active=[])
+
+
+def cb_button1(event):
+    data = source.to_df()
+    for label in LABELS:
+        out[label][:] = (data[label]>0).astype(bool)
+    print('saved')
 
 
 ### CREATE PLOTS
