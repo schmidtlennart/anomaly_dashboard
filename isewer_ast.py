@@ -4,18 +4,17 @@ import numpy as np
 
 from bokeh.plotting import figure, curdoc, show
 from bokeh.layouts import column, row
-from bokeh.models.tools import HoverTool
-from bokeh.models import ColumnDataSource, RangeTool, CustomJS, MultiChoice, Select, MultiSelect, Spacer, Button, CheckboxButtonGroup
+from bokeh.models.tools import HoverTool, BoxSelectTool
+from bokeh.models import ColumnDataSource, RangeTool, MultiChoice, Select, MultiSelect, Spacer, Button, CheckboxButtonGroup
 from bokeh.palettes import Turbo256#Category20
 
-from isewer_ast.callbacks import *
-
 ### TO DO
-# - clear-all button for list selects
+# - venv locally to check speed
 # - save current columns when switching month
 # - drop NAs of each column on the fly so that lines actually get connected. I.E. different xs for each column
 # - rearrange order of year-month 1...12
-# - create empty data source upon start up, fill data when selecting in dropdown (necessary?)
+# - rewrite such that adding columns from left list = add to ColumnDataSource
+# -adjust "reset" tool to reset to astart/end of selected month (x_range.update(start=0, end=1) on data update)
 
 # Create dict of input file paths
 FILES = {}
@@ -24,8 +23,70 @@ for file in sorted(os.listdir(DATADIR)):
     if ("2022_" in file) | ("2021_" in file):#filter for 2021+2022
         FILES[file[:7]] = DATADIR+file
 INITIAL_FILE = "2022_04"
+INITIAL_VOI = "Niveau_RÜ_BerlinerAllee"
 
 #new="2022_05"
+
+### WIDGET CALLBACKS
+# change month to be plotted
+
+def cb_select_voi(attrname, old, new):
+     # redraw plot 0 based on column selection to change visual selection behaviour as voi changes
+    cols = multi_list0.value + multi_choice0.value
+    draw_plot(ps[0], cols ,source,COLORS, ptype="circle")   
+
+def cb_new_data(attrname, old, new):
+    print("updating data..")
+    ### Load new data
+    data = pd.read_feather(FILES[new])#columns=read_cols
+    print("data loaded") 
+    data.DateTime = pd.to_datetime(data.DateTime)# no need to set format because done in "011_load_to_feather.py"
+    source.data = data# use from_df?
+    print("updated datasource")
+    # update xlim of first plot (rest follows)
+    ps[0].x_range.update(start=data.DateTime[0], end = data.DateTime[10000])
+    print("updated plot limits")
+    #plot_all(ps, source)#does not help
+
+def cb_new_cols0 (attrname, old, new):
+    # redraw plot 0 based on column selection
+    cols = new + multi_list0.value
+    draw_plot(ps[0], cols ,source,COLORS, ptype="circle")
+
+def cb_new_cols1 (attrname, old, new):
+    # redraw plot 2 based on columns selection
+    cols = new + multi_list1.value
+    draw_plot(ps[1], cols ,source,COLORS, ptype="bar")
+
+def cb_multi_list0 (attrname, old, new):
+    # add more cols to multichoice0.value & plot 0 redraw
+    cols = multi_choice0.value + new
+    draw_plot(ps[0], cols ,source,COLORS, ptype="circle")  
+
+def cb_multi_list1 (attrname, old, new):
+    # add more cols to multichoice1.value & plot 1 redraw
+    cols = multi_choice1.value + new
+    draw_plot(ps[1], cols ,source,COLORS, ptype="bar")  
+
+def cb_button0():
+    # empty multilist and replot only multicolumn selections
+    multi_list0.value = []
+    draw_plot(ps[0], multi_choice0.value ,source,COLORS, ptype="circle")
+
+def cb_button1():
+    # empty multilist and replot only multicolumn selections
+    multi_list1.value = []
+    draw_plot(ps[1], multi_choice1.value ,source,COLORS, ptype="bar")
+
+def cb_selection_change (attrname, old, new):
+        selected = source.selected
+        print(selected.name)
+        print(selected.indices)
+        #print(ps[0].tools[-1].renderers[0].name)
+    # if selected:
+    #     data = data.iloc[selected, :]
+
+
 
 ### SET UP WIDGETS #1
 ### Dropdown to choose year
@@ -48,8 +109,12 @@ n_all_cols = len(all_cols)
 mask0 = data.columns.str.contains("BerlinerAllee|Uferstraße|Hindenburgstraße|Vogesenstraße")
 OPTIONS0 = sorted(data.columns[mask0 & data.columns.str.contains("Niveau")].to_list())
 OPTIONS1 = sorted(data.columns[data.columns.str.contains("Niederschlag")].to_list()) + sorted(data.columns[mask0].to_list())
-
 MULTI_LIST_WIDTH = 220
+
+# Dropdown to set Variable of interest to be labelled
+select_voi = Select(title="Variable of Interest", value=INITIAL_VOI, options=OPTIONS0)
+select_voi.on_change("value", cb_select_voi)
+
 # Berliner Strang variables
 multi_choice0 = MultiChoice(value=["Niveau_RÜ_BerlinerAllee","Niveau_RÜ_Uferstraße"], options=OPTIONS0)
 multi_choice0.on_change("value", cb_new_cols0)
@@ -71,7 +136,9 @@ button1.on_event('button_click', cb_button1)
 # Selection for flagging
 source.selected.on_change('indices', cb_selection_change)
 # FLag buttons
-button1 = Button(label="Save flags", button_type="success", height=25)
+button_safeflags = Button(label="Save flags", button_type="success", height=25)
+button0.on_event('button_click', cb_button0)
+
 # button2 = Button(label="Delete all flags", button_type="success", height=25)
 # button2a = Button(label="Delete selected type of flags", button_type="success", height=25)
 # button2b = Button(label="Delete flags in current selection", button_type="success", height=25)
@@ -79,16 +146,15 @@ button3 = Button(label="Flag period", button_type="success", height=25)
 LABELS = ["Sensor Anomaly", "System Anomaly", "Other"]
 checkbox_button_group = CheckboxButtonGroup(labels=LABELS, active=[])
 
-
 def cb_button1(event):
-    data = source.to_df()
-    for label in LABELS:
-        out[label][:] = (data[label]>0).astype(bool)
+    # data = source.to_df()
+    # for label in LABELS:
+    #     out[label][:] = (data[label]>0).astype(bool)
     print('saved')
 
 
 ### CREATE PLOTS
-TOOLS = "pan,box_zoom,wheel_zoom,box_select,reset"
+TOOLS = "pan,box_zoom,wheel_zoom,box_select,reset"#
 WIDTH, HEIGHT = 1500,350
 # get one color for each variable
 np.random.seed(12)#to keep colors the same
@@ -100,7 +166,7 @@ COLORS = dict(zip(all_cols,color_seq))
 ps = [[],[]]
 xleft = data.DateTime[0]
 xright = data.DateTime[10000]
-ps[0] = figure(width=WIDTH, height=HEIGHT, x_axis_type="datetime", title='',tools=TOOLS,x_range=(xleft,xright), active_drag="pan", active_scroll="wheel_zoom")
+ps[0] = figure(width=WIDTH, height=HEIGHT, x_axis_type="datetime", title='',tools=TOOLS,x_range=(xleft,xright), active_drag="pan", active_scroll="wheel_zoom")#, output_backend="webgl"#webgl=GPU acceleration
 ps[1] = figure(width=WIDTH, height=HEIGHT, x_axis_type="datetime", title='',tools=TOOLS, x_range=ps[0].x_range)
 # sizing to window
 #ps[0].sizing_mode = 'scale_width'
@@ -116,7 +182,7 @@ range_tool = RangeTool(x_range=ps[0].x_range)#
 range_tool.overlay.fill_color = "navy"
 range_tool.overlay.fill_alpha = 0.2
 
-slider.circle(x='DateTime', size=3,y="Niveau_RÜ_BerlinerAllee",fill_color="darkgray",line_color=None, fill_alpha=0.7, source=source)#olors[0]
+slider.circle(x='DateTime', size=3,y=select_voi.value,fill_color="darkgray",line_color=None, fill_alpha=0.7, source=source)#olors[0]
 slider.ygrid.grid_line_color = None
 slider.add_tools(range_tool)
 slider.toolbar.active_multi = range_tool
@@ -129,15 +195,25 @@ def draw_plot(p, cols, source, COLORS, ptype):
     if p.legend: 
         p.legend.items = []
     p.renderers.clear()
-    for col in cols:
-        if ptype == "circle":
+    # top plot: circles
+    if ptype == "circle":
+        for col in cols:
+            nonselect_alpha = 0.9
+            select_color = COLORS[col]
+            # if col = voi enable changing appearance of points
+            if col == select_voi.value:
+                nonselect_alpha = 0.1
+                select_color = "orange"
             p.circle(x='DateTime', y=col, size=3,
                             fill_color=COLORS[col], hover_fill_color="firebrick",
                             fill_alpha=0.7, hover_alpha=0.95,
-                            line_color=None, hover_line_color="white", legend_label=col, name=col, source=source)
-        if ptype == "bar":
+                            line_color=None, hover_line_color="white", legend_label=col, name=col, source=source, nonselection_fill_alpha=nonselect_alpha,
+                             selection_color=select_color)
+    #top plot: bars
+    if ptype == "bar":
+        for col in cols:
             p.vbar(x='DateTime', top=col, width=2,
-                fill_color=COLORS[col], fill_alpha=1, line_color=COLORS[col], legend_label=col, name=col, source=source)
+                fill_color=COLORS[col], fill_alpha=1, line_color=COLORS[col], legend_label=col, name=col, source=source, nonselection_fill_alpha=1)# somehow non-selection alpha does not work
 
 #ottom, decorations, fill_alpha, fill_color, hatch_alpha, hatch_color, hatch_extra, hatch_pattern, hatch_scale, hatch_weight, js_event_callbacks, js_property_callbacks, line_alpha, line_cap, line_color, line_dash, line_dash_offset, line_join, line_width, name, subscribed_events, syncable, tags, top, width or x
 
@@ -148,7 +224,21 @@ def plot_all(ps, source):
         draw_plot(ps[p_i], cols[p_i],source,COLORS, ptype=PTYPES[p_i])
         ps[p_i].legend.location = "top_left"
         ps[p_i].legend.click_policy="hide"
+    # renderer_dict = {r.name:i for i, r in enumerate(ps[0].renderers)}
+    # renderer_i = renderer_dict[select_voi.value]
+    # ps[0].add_tools(BoxSelectTool(renderers=[ps[0].renderers[renderer_i]],dimensions="height"))
+    #ps[0].tools[3].renderers = [ps[0].renderers[renderer_i]]
 
+
+
+# def update_box_select():
+#     # set box select tool so that it only selects toe variable of interest (voi)
+#     # dict of indices of renderers
+#     renderer_dict = {r.name:i for i, r in enumerate(ps[0].renderers)}
+#     renderer_i = renderer_dict[select_voi.value]
+#     dir(ps[0].tools[3].renderers)
+#     dir(ps[0]).tools
+#     p.add_tools(BoxSelectTool(renderers=ps[0].renderers[renderer_i]))
 
 # initial set-up
 plot_all(ps, source)
@@ -167,7 +257,7 @@ plot_all(ps, source)
 # layout = row(col0, col1)
 
 
-row0 = row(select0)
+row0 = row(select0, select_voi)
 row1 = row(column(multi_list0, button0),column(multi_choice0, ps[0]))
 row2 = row(column(multi_list1, button1),column(multi_choice1, ps[1]))
 row3 = row(Spacer(width=MULTI_LIST_WIDTH),slider)
