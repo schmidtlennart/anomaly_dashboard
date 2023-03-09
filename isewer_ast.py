@@ -5,7 +5,7 @@ import numpy as np
 from bokeh.plotting import figure, curdoc, show
 from bokeh.layouts import column, row
 from bokeh.models.tools import HoverTool, BoxSelectTool
-from bokeh.models import ColumnDataSource, RangeTool, MultiChoice, Select, MultiSelect, Spacer,Button, RadioButtonGroup, Band, CDSView, BooleanFilter
+from bokeh.models import ColumnDataSource, RangeTool, MultiChoice, Select, MultiSelect, Spacer,Button, RadioButtonGroup, Band, CDSView, BooleanFilter, BoxAnnotation
 from bokeh.palettes import Turbo256#Category20
 
 ### TO DO
@@ -16,6 +16,7 @@ from bokeh.palettes import Turbo256#Category20
 # - rearrange order of year-month 1...12
 # - rewrite such that adding columns from left list = add to ColumnDataSource
 # -adjust "reset" tool to reset to astart/end of selected month (x_range.update(start=0, end=1) on data update)
+# -with resampled data: Check if selection still excludes rows that are in the interval but not shown =  no label even though inside selection...
 
 # Create dict of input file paths
 FILES = {}
@@ -27,7 +28,7 @@ INITIAL_FILE = "2022_04"
 INITIAL_VOI = "Niveau_RÜ_BerlinerAllee"
 LABELS = ["Sensor Anomaly", "System Anomaly", "Other"]
 LABELCOLORS = ["lightblue", "red","gray"]
-#new="2022_05"
+new="2022_05"
 
 ### WIDGET CALLBACKS
 # change month to be plotted
@@ -39,7 +40,7 @@ def cb_select_voi(attrname, old, new):
     # redraw plot 0 based on column selection to change visual selection behaviour as voi changes
     cols = multi_list0.value + multi_choice0.value
     draw_ts(ps[0], cols ,source,COLORS, ptype="circle")
-    draw_labels()   
+    #draw_labels()   
 
 # after selection of anomalous data, select anomaly type
 def cb_label_buttons(attrname, old, new):
@@ -49,8 +50,10 @@ def cb_label_buttons(attrname, old, new):
     patch = {voi_label : [(s,new+1) for s in selected]}#NaN =No Label, >0 = one of the labels
     #print(patch)
     source.patch(patch)
+    print("patched datasource")
     # redraw labels
     draw_labels()
+    print("labels drawn")
     # after operation, reset selected indices + buttons
     source.selected.indices = []
     label_buttons.active = None
@@ -195,7 +198,8 @@ def cb_clearbutton1(event):
 
 
 ### CREATE PLOTS
-TOOLS = "pan,box_zoom,wheel_zoom,box_select,reset"#
+TOOLS0 = "pan,box_zoom,wheel_zoom,box_select,reset"#
+TOOLS1 = "pan,box_zoom,wheel_zoom,reset"#
 WIDTH, HEIGHT = 1500,350
 # get one color for each variable
 np.random.seed(12)#to keep colors the same
@@ -207,9 +211,9 @@ COLORS = dict(zip(all_cols,color_seq))
 ps = [[],[]]#holds timeseries
 xleft = data.DateTime[0]
 xright = data.DateTime[10000]
-ps[0] = figure(width=WIDTH, height=HEIGHT, x_axis_type="datetime", title='',tools=TOOLS,x_range=(xleft,xright), active_drag="pan", active_scroll="wheel_zoom")#, output_backend="webgl"#webgl=GPU acceleration, causes problems with vbar
-pl = figure(width=WIDTH, height=120, x_axis_type="datetime", title='',tools=TOOLS,x_range=ps[0].x_range, active_drag="pan", active_scroll="wheel_zoom")
-ps[1] = figure(width=WIDTH, height=HEIGHT, x_axis_type="datetime", title='',tools=TOOLS, x_range=ps[0].x_range)
+ps[0] = figure(width=WIDTH, height=HEIGHT, x_axis_type="datetime", title='',tools=TOOLS0,x_range=(xleft,xright), active_drag="pan", active_scroll="wheel_zoom")#, output_backend="webgl"#webgl=GPU acceleration, causes problems with vbar
+pl = figure(width=WIDTH, height=120, x_axis_type="datetime", title='',tools=TOOLS1,x_range=ps[0].x_range, active_drag="pan", active_scroll="wheel_zoom")
+ps[1] = figure(width=WIDTH, height=HEIGHT, x_axis_type="datetime", title='',tools=TOOLS1, x_range=ps[0].x_range)
 
 # sizing to window (does not work)
 #ps[0].sizing_mode = 'scale_width'
@@ -256,29 +260,59 @@ def draw_ts(p, cols, source, COLORS, ptype):
         for col in cols:
             p.vbar(x='DateTime', top=col, width=2,
                 fill_color=COLORS[col], fill_alpha=1, line_color=COLORS[col], legend_label=col, name=col, source=source, nonselection_fill_alpha=1)# somehow non-selection alpha does not work
+# from datetime import datetime as dt
+# source.data["DateTime"][0].timestamp()*1000
+# pd.Timestamp(source.data["DateTime"][0])*1000
 
 def draw_labels():
-    if pl.legend: 
-        pl.legend.items = []
-    pl.renderers.clear()
-   # for i,label in enumerate(LABELS):
-    #    print(str(i))
-        # filter Label column by levels
+#     if pl.legend: 
+#         pl.legend.items = []
+#     pl.renderers.clear()
+#    # for i,label in enumerate(LABELS):
+#     #    print(str(i))
+#         # filter Label column by levels
     var = select_voi.value+"_Label"
-    # mask = source.data[var] == i+1
-    # view = CDSView(filter=BooleanFilter(mask))
-    # print("created view label "+str(i))
-    i=1
-    label=LABELS[i]
-    pl.circle(x='DateTime', y=var, size=9, source=source, #view=view,
-            alpha=1.0, color=LABELCOLORS[i],line_color=None,
-                selection_color="orange", legend_label=label)      
-    print("added circles")
-    pl.legend.orientation = "horizontal"
-    pl.legend.location = "top_right"
-    pl.legend.border_line_color = None
-    pl.legend.background_fill_alpha = 0
+#     # mask = source.data[var] == i+1
+#     # view = CDSView(filter=BooleanFilter(mask))
+#     # print("created view label "+str(i))
+#     i=1
+#     label=LABELS[i]
+#     pl.circle(x='DateTime', y=var, size=9, source=source, #view=view,
+#             alpha=1.0, color=LABELCOLORS[i],line_color=None,
+#                 selection_color="orange", legend_label=label)      
+#     print("added circles")
+#     pl.legend.orientation = "horizontal"
+#     pl.legend.location = "top_right"
+#     pl.legend.border_line_color = None
+    # selected = source.selected.indices
+    # if selected:
+    #     ind_left = selected[0]
+    #     ind_right = selected[-1]
+    #     left = (pd.to_datetime(source.data["DateTime"][ind_left]).timestamp())*1000#currentyl no dt support so recalc
+    #     right = (pd.to_datetime(source.data["DateTime"][ind_right]).timestamp())*1000
+    #     #left, right = source.data["DateTime"][selected[0]], source.data["DateTime"][selected[-1]]
+    #     print(left)
+    #     print(right)
+    #     box = BoxAnnotation(left=left, right=right, fill_alpha=0.2, fill_color="darkorange")
+    #     ps[0].add_layout(box)
 
+    # find beginning and end of labeling sequence and draw annotation from start to end
+    left, right = np.nan,np.nan
+    keepval=np.nan
+    for i, val in enumerate(source.data[var]):
+        # if a label starts and there was none before
+        if (not np.isnan(val)) and (np.isnan(keepval)):
+            keepval=val
+            ind_left = i
+        # if it ends and there was a keepval
+        if (np.isnan(val)) and (keepval >= 0):
+            keepval=val
+            ind_right = i
+            left = (pd.to_datetime(source.data["DateTime"][ind_left]).timestamp())*1000#currentyl no dt support so recalc
+            right = (pd.to_datetime(source.data["DateTime"][ind_right]).timestamp())*1000
+            box = BoxAnnotation(left=left, right=right, fill_alpha=0.2, fill_color="darkorange")
+            ps[0].add_layout(box)
+        # Not implemented: if first category 1, then category 2
 
 def plot_all(ps, source):
     cols = [multi_choice0.value,multi_choice1.value]
@@ -291,6 +325,10 @@ def plot_all(ps, source):
 
 # initial set-up
 plot_all(ps, source)
+
+s  = slice(pd.to_datetime("2022-04-01 13:13:00"),pd.to_datetime("2022-04-01 13:15:00"))
+data1 = data.set_index("DateTime")
+data1["2022-04-01 13:13:00":"2022-04-01 13:15:00"]
 
 ### FILTERINGd
 #view = CDSView(filter=IndexFilter([0, 2, 4]))
