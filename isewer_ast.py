@@ -11,11 +11,21 @@ from bokeh.transform import linear_cmap
 
 ### TO DO
 
-# - venv locally to check speed
+#PRIO 1
+# - Move rangetool by left+right arrow keys
 # - rearrange order of year-month 1...12
-# -adjust "reset" tool to reset to astart/end of selected month (x_range.update(start=0, end=1) on data update)
-# -with resampled data: Check if selection still excludes rows that are in the interval but not shown =  no label even though inside selection.
-# -with resampeld data: vline instead of circle
+# - arrange multilists by bauwerk
+# - enable selection of Strang to be labelled at startup
+# - adjust "reset" tool to reset to astart/end of selected month (x_range.update(start=0, end=1) on data update)
+
+
+#PRIO 2
+# add bar vs circle to plot 2 or add 3rd plot entirely free
+# - with resampled data: Check if selection still excludes rows that are in the interval but not shown =  no label even though inside selection.
+# - with resampeld data: vline instead of circle
+# - venv locally to check speed
+# - "restart me"-button
+
 
 # Create dict of input file paths
 FILES = {}
@@ -42,21 +52,26 @@ def cb_select_voi(attrname, old, new):
 def cb_new_data(attrname, old, new):
     print("updating data..")
     ### save current data to file
-    cb_save_all_labels()
+    print(f"old: {old}")
+    print(f"new: {new}")
+    cb_save_all_labels(old)
     ### Load new data
     data = pd.read_feather(FILES[new])#columns=read_cols
     print("data loaded") 
     data.DateTime = pd.to_datetime(data.DateTime)# no need to set format because done in "011_load_to_feather.py"
-    #cols = INITIALCOLS + multi_list0.value + multi_list1.value
-    cols = list(source.data.keys())
-    source.data = data.loc[:,cols]# use from_df?
+    cols0 = INITIALCOLS + multi_list0.value + multi_list1.value
+    source.data = data.loc[:,cols0]#.to_dict()# use from_df?
     print("updated datasource")
     # update xlim of first plot (rest follows)
     ps[0].x_range.update(start=data.DateTime[0], end = data.DateTime[10000])
-    print("updated plot limits")
+    #print("updated plot limits")
     source.selected.indices = []
-    print("cleared selection")
+    #print("cleared selection")
     plot_all(ps, source)
+    print("new head indices")
+    print(source.data["DateTime"][:1])
+    print("Data indices")
+    print(data.DateTime[:1])
    
 def cb_new_cols0 (attrname, old, new):
     # redraw plot 0 based on column selection
@@ -138,11 +153,13 @@ def cb_delete_all_labels():
     voi_label = select_voi.value + "_Label"
     source.data[voi_label] = np.repeat(np.nan, len(source.data[voi_label]))
 # save all labels of current month to feather-file
-def cb_save_all_labels():
+def cb_save_all_labels(old=None):
+    # old: if called via cb_select_ym, save old data using old ym
     outdata = source.to_df()
     outdata = outdata.loc[:,outdata.columns.str.contains("_Label")]
     data.loc[:,outdata.columns] = outdata
-    data.to_feather(FILES[select_ym.value])
+    ym = old if old else select_ym.value
+    data.to_feather(FILES[ym])
     print("saved data")
 
 ### SET UP WIDGETS #1
@@ -203,13 +220,13 @@ source.selected.on_change('indices', cb_selection_change)
 
 ### LABELLING
 # Anomaly Label buttons, Set label if pressed
-label_buttons = RadioButtonGroup(labels=LABELS, button_type="primary",disabled=True, width=800)
+label_buttons = RadioButtonGroup(labels=LABELS, button_type="primary",disabled=True, width=1500, height=35)
 label_buttons.on_change("active", cb_set_labels)
 # delete labels in current selection
-button_delete_sel_labels = Button(label="Delete labels in selection", button_type="danger", height=25, disabled=True)
+button_delete_sel_labels = Button(label="Delete labels in selection", button_type="danger", height=35, width=500,disabled=True)
 button_delete_sel_labels.on_event('button_click', cb_delete_sel_labels)
 #delete all labels that were set
-button_delete_all_labels = Button(label="Delete ALL labels", button_type="danger", height=25)
+button_delete_all_labels = Button(label="Delete all labels", button_type="danger", height=25)
 button_delete_all_labels.on_event('button_click', cb_delete_all_labels)
 # save all labels to feather-file
 button_save_all_labels = Button(label="Save labels to file", button_type="success", height=25)
@@ -269,11 +286,13 @@ def draw_ts(p, cols, source, COLORS, ptype):
         for col in cols:
             nonselect_alpha = 0.9
             select_color = COLORS[col]
+            size=1
             # if col = voi enable changing appearance of points
             if col == select_voi.value:
                 nonselect_alpha = 0.1
                 select_color = "orange"
-            p.circle(x='DateTime', y=col, size=3,
+                size = 3
+            p.circle(x='DateTime', y=col, size=size,
                             fill_color=COLORS[col], hover_fill_color="firebrick",
                             fill_alpha=0.7, hover_alpha=0.95,
                             line_color=None, hover_line_color="white", legend_label=col, name=col, source=source, nonselection_fill_alpha=nonselect_alpha,
@@ -320,15 +339,21 @@ def plot_all(ps, source):
 # initial set-up
 plot_all(ps, source)
 
-row0 = row(select_ym, select_voi, label_buttons, button_delete_sel_labels, button_delete_all_labels, button_save_all_labels)
-row1 = row(column(multi_list0, clearbutton0),column(multi_choice0, ps[0],pl))
+row0 = row(select_ym, select_voi)
+row01 = row(label_buttons, button_delete_sel_labels)
+row1 = row(column(multi_list0, clearbutton0, button_delete_all_labels, button_save_all_labels),column(multi_choice0, ps[0],pl))
 row2 = row(column(multi_list1, clearbutton1),column(multi_choice1, ps[1]))
 row3 = row(Spacer(width=MULTI_LIST_WIDTH),slider)
-layout=column(row0,row1,row2,row3)
+layout=column(row0,row01,row1,row2,row3)
 curdoc().add_root(layout)
-curdoc().title = "i-SEWER Anomaly Selection Tool"
+curdoc().title = "i-SEWER Anomaly Selection Tool"# apply theme to current document
 
-
+# import time
+# # for testing of datasource problem
+# for m in ["2021_03","2022_02","2021_05"]:
+#     print(m)
+#     select_ym.value = m
+#     time.sleep(10)
 ### IDEAS to UPDATE DATA SOURCE WHEN CHOOSING OTHER MONTH
 ## TWO WAYS To ACHIEVE DROP DOWN THAT CHANGES COLUMNS SHOWN
 # - clean renderers entirely and re-plot in callback
