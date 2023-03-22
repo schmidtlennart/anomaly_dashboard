@@ -17,7 +17,7 @@ from bokeh.transform import linear_cmap
 # - arrange multilists by bauwerk
 # - enable selection of Strang to be labelled at startup
 # - adjust "reset" tool to reset to astart/end of selected month (x_range.update(start=0, end=1) on data update)
-
+# -set persistent seed
 
 #PRIO 2
 # add bar vs circle to plot 2 or add 3rd plot entirely free
@@ -29,7 +29,7 @@ from bokeh.transform import linear_cmap
 
 # Create dict of input file paths
 FILES = {}
-DATADIR = "/data/isewer/data/012_split_by_year_month/by_month/"
+DATADIR = "/data/isewer/data/011_split_by_year_month/by_month/"
 for file in sorted(os.listdir(DATADIR)):
     if ("2022_" in file) | ("2021_" in file):#filter for 2021+2022
         FILES[file[:7]] = DATADIR+file
