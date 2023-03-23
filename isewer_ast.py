@@ -165,6 +165,8 @@ def cb_save_all_labels(old=None):
     ym = old if old else select_ym.value
     print(f"Old from selection: {old}")
     print(f"Saving to: {ym}")
+    print("Data indices")
+    print(data.DateTime[:1])### HIER HAT ER IMMER NOCH APRIL, aber irgwie nur in dieser Funktion
     data.to_feather(FILES[ym])
     print("saved data")
 
