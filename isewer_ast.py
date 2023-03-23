@@ -11,7 +11,11 @@ from bokeh.transform import linear_cmap
 
 ### TO DO
 
+# Christian
+# - dritter Plot für Enlastungsereigenisse ja/nein etc.
+
 #PRIO 1
+# - Abfack wenn Neuer Monat geladen aber alter drin - überschreibt beim Wechsel die Daten. 1) nur flags speichern (mache ich ?) oder 2) nur speichern direkt wenn wenn falgs gesetzt werden
 # - Move rangetool by left+right arrow keys
 # - rearrange order of year-month 1...12
 # - arrange multilists by bauwerk
@@ -159,6 +163,8 @@ def cb_save_all_labels(old=None):
     outdata = outdata.loc[:,outdata.columns.str.contains("_Label")]
     data.loc[:,outdata.columns] = outdata
     ym = old if old else select_ym.value
+    print(f"Old from selection: {old}")
+    print(f"Saving to: {ym}")
     data.to_feather(FILES[ym])
     print("saved data")
 
