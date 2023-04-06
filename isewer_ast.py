@@ -13,6 +13,8 @@ from bokeh.transform import linear_cmap
 
 # Christian
 # - dritter Plot für Enlastungsereigenisse ja/nein etc.
+# - Reduce Alpha of plots so that all can be seen
+#- muting during selection only the selected one
 
 #PRIO 1
 # - Abfack wenn Neuer Monat geladen aber alter drin - überschreibt beim Wechsel die Daten. 1) nur flags speichern (mache ich ?) oder 2) nur speichern direkt wenn wenn falgs gesetzt werden
@@ -22,6 +24,7 @@ from bokeh.transform import linear_cmap
 # - enable selection of Strang to be labelled at startup
 # - adjust "reset" tool to reset to astart/end of selected month (x_range.update(start=0, end=1) on data update)
 # -set persistent seed
+# wheel zoom: Only in x-axis (zooming in sometimes doesnt go back)
 
 #PRIO 2
 # add bar vs circle to plot 2 or add 3rd plot entirely free
@@ -58,7 +61,7 @@ def cb_new_data(attrname, old, new):
     ### save current data to file
     print(f"old: {old}")
     print(f"new: {new}")
-    cb_save_all_labels(old)
+    #cb_save_all_labels(old)
     ### Load new data
     data = pd.read_feather(FILES[new])#columns=read_cols
     print("data loaded") 
