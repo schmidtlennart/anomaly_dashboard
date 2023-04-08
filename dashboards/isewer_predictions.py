@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 import numpy as np
-
+import random
 from bokeh.plotting import figure, curdoc, show
 from bokeh.layouts import column, row
 from bokeh.models.tools import HoverTool, BoxSelectTool
@@ -56,9 +56,8 @@ def cb_new_data(attrname, old, new):
 
     cols0 = INITIALCOLS + multi_list0.value + multi_list1.value
     cols_pr = ["pr_"+c for c in cols0]
-    alldata = pd.concat([data.loc[:,cols0],data_pr.loc[:,cols_pr]], axis=1)
-
-    source.data = alldata
+    alldata = pd.concat([data,data_pr], axis=1)
+    source.data = alldata.loc[:,cols0+cols_pr]
     print("updated datasource")
     # update xlim of first plot (rest follows)
     ps[0].x_range.update(start=data.DateTime[0], end = data.DateTime[10000])
@@ -84,22 +83,26 @@ def cb_new_cols1 (attrname, old, new):
 def cb_multi_list0 (attrname, old, new):
     # add respective columns to datasource
     newcols = list(set(new)-set(source.data.keys()))
+    # add predictions too
+    newcols = newcols + ["pr_"+c for c in newcols]
     print("adding cols: \n")
     print(newcols)
     for nc in newcols:
-        source.data[nc] = data[nc]
+        source.data[nc] = alldata[nc]
     # add all cols from this list to multichoice0.value & plot 0 redraw
     cols = multi_choice0.value + new
     draw_ts(ps[0], cols ,source,COLORS, ptype="circle")  
 
 def cb_multi_list1 (attrname, old, new):
     # add respective columns to datasource (if not existant yet)
+    # add respective columns to datasource
     newcols = list(set(new)-set(source.data.keys()))
+    # add predictions too
+    newcols = newcols + ["pr_"+c for c in newcols]
     print("adding cols: \n")
     print(newcols)
     for nc in newcols:
-        source.data[nc] = data[nc]
-    # add all cols from this list to multichoice1.value & plot 1 redraw
+        source.data[nc] = alldata[nc]    # add all cols from this list to multichoice1.value & plot 1 redraw
     cols = multi_choice1.value + new
     draw_ts(ps[1], cols ,source,COLORS, ptype="bar")  
 
@@ -201,9 +204,8 @@ INITIALCOLS = list(set(["DateTime"] + OPTIONS0 + OPTIONS1))# + [c+"_Label" for c
 INITIALCOLS_PR = ["pr_"+c for c in INITIALCOLS]
 
 ### merge predictions and observed data
-alldata = pd.concat([data.loc[:,INITIALCOLS],data_pr.loc[:,INITIALCOLS_PR]], axis=1)
-
-source = ColumnDataSource(alldata)
+alldata = pd.concat([data,data_pr], axis=1)
+source = ColumnDataSource(alldata.loc[:,INITIALCOLS+INITIALCOLS_PR])
 print("created datasource")
 # save column names
 all_cols = data.columns.to_list() + data_pr.columns.to_list()
@@ -259,7 +261,11 @@ TOOLS1 = "pan,box_zoom,wheel_zoom,reset"#
 WIDTH, HEIGHT = 1500,350
 HEIGHT1 = 100
 # get one color for each variable
-np.random.seed(12)#to keep colors the same
+seed = 36
+# 1. Set `PYTHONHASHSEED` environment variable at a fixed value
+os.environ['PYTHONHASHSEED']=str(seed)
+random.seed(seed)
+np.random.seed(seed)#to keep colors the same
 rand_seq = np.random.choice(n_all_cols,n_all_cols, replace=False)#randomize colors to get distiniguihsable colors from conitnous colormap
 palette = Turbo256*2# more than 256 variabelw
 color_seq = [palette[r] for r in rand_seq]
