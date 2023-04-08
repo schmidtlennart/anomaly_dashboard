@@ -148,7 +148,8 @@ def cb_delete_sel_labels():
     voi_label = select_voi.value + "_Label"
     selected = source.selected.indices
     if selected:
-        patch = {voi_label : [(s,np.nan) for s in selected]}#NaN =No Label, >0 = one of the labels
+        #NaN =No Label, >0 = one of the labels, either 0.1,0.2 or 0.3. +1 for values starting with 1 / 10 = 0.1
+        patch = {voi_label : [(s,np.nan) for s in selected]}
         source.patch(patch)
     # after operation, reset selected indices + buttons
     source.selected.indices = []
@@ -308,7 +309,7 @@ def draw_ts(p, cols, source, COLORS, ptype):
                             fill_alpha=0.7, hover_alpha=0.95,
                             line_color=None, hover_line_color="white", legend_label=col, name=col, source=source, nonselection_fill_alpha=nonselect_alpha,
                              selection_color=select_color)
-    #top plot: bars
+    #bottom plot: bars
     if ptype == "bar":
         for col in cols:
             p.vbar(x='DateTime', top=col, width=2,
