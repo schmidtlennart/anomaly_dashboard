@@ -22,7 +22,7 @@ for file in sorted(os.listdir(DATADIR_PR)):
     if ("2022_" in file) | ("2021_" in file):#filter for 2021+2022
         FILES_PR[file[:7]] = DATADIR_PR+file
 
-INITIAL_FILE = "2022_01"
+INITIAL_FILE = "2021_06"
 INITIAL_VOI = "Niveau_RÜ_BerlinerAllee"
 LABELS = ["Sensor Anomaly", "System Anomaly", "Other"]
 LABELCOLORS = ["lightblue", "darkred","gray"]

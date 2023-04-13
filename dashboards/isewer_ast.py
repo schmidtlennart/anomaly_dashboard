@@ -298,12 +298,12 @@ def draw_ts(p, cols, source, COLORS, ptype):
         for col in cols:
             nonselect_alpha = 0.9
             select_color = COLORS[col]
-            size=1
+            size=2
             # if col = voi enable changing appearance of points
             if col == select_voi.value:
                 nonselect_alpha = 0.1
                 select_color = "orange"
-                size = 3
+                size = 3.5
             p.circle(x='DateTime', y=col, size=size,
                             fill_color=COLORS[col], hover_fill_color="firebrick",
                             fill_alpha=0.7, hover_alpha=0.95,
