@@ -40,18 +40,18 @@ DATADIR = "/data/isewer/data/011_split_by_year_month/by_month/"
 for file in sorted(os.listdir(DATADIR)):
     if ("2022_" in file) | ("2021_" in file):#filter for 2021+2022
         FILES[file[:7]] = DATADIR+file
-INITIAL_FILE = "2022_04"
+INITIAL_FILE = "2021_12"
 INITIAL_VOI = "Niveau_RÜ_BerlinerAllee"
 LABELS = ["Sensor Anomaly", "System Anomaly", "Other"]
 LABELCOLORS = ["lightblue", "darkred","gray"]
-
 
 ### WIDGET CALLBACKS
 # change month to be plotted
 
 def cb_select_voi(attrname, old, new):
     # redraw plot 0 based on column selection to change visual selection behaviour as voi changes
-    cols = multi_list0.value + multi_choice0.value
+    #cols = list(set(multi_list0.value + multi_choice0.value + [new]))
+    cols=multi_list0.value + multi_choice0.value
     draw_ts(ps[0], cols ,source,COLORS, ptype="circle")
     #redraw labels
     draw_labels()
@@ -193,8 +193,9 @@ mask0 = cols_values.str.contains("BerlinerAllee|Uferstraße|Hindenburgstraße|Vo
 # all Niveaus
 OPTIONS0 = sorted(cols_values[mask0 & cols_values.str.contains("Niveau")].to_list())
 OPTIONS1 = sorted(cols_values[cols_values.str.contains("Niederschlag")].to_list()) + sorted(cols_values[mask0].to_list())
+#OPTIONS0 = list(reversed(OPTIONS1))
 #intial columns are the above including labels of Option0
-INITIALCOLS = list(set(["DateTime"] + OPTIONS0 + OPTIONS1 + [c+"_Label" for c in OPTIONS0]))
+INITIALCOLS = list(set(["DateTime"] + OPTIONS0 + OPTIONS1 + [c+"_Label" for c in OPTIONS1]))
 source = ColumnDataSource(data.loc[:,INITIALCOLS])
 print("created datasource")
 # save column names
@@ -206,7 +207,7 @@ n_all_cols = len(all_cols)
 MULTI_LIST_WIDTH = 220
 
 # Dropdown to set Variable of interest to be labelled
-select_voi = Select(title="Variable of Interest", value=INITIAL_VOI, options=OPTIONS0)
+select_voi = Select(title="Variable of Interest", value=INITIAL_VOI, options=list(reversed(OPTIONS1)))
 select_voi.on_change("value", cb_select_voi)
 
 # Berliner Strang variables
@@ -261,7 +262,7 @@ ps = [[],[]]#holds timeseries
 xleft = data.DateTime[0]
 xright = data.DateTime[10000]
 ps[0] = figure(width=WIDTH, height=HEIGHT, x_axis_type="datetime", title='',tools=TOOLS0,x_range=(xleft,xright), active_drag="pan", active_scroll="wheel_zoom")#, output_backend="webgl"#webgl=GPU acceleration, causes problems with vbar
-ps[1] = figure(width=WIDTH, height=HEIGHT, x_axis_type="datetime", title='',tools=TOOLS1, x_range=ps[0].x_range)
+ps[1] = figure(width=WIDTH, height=HEIGHT, x_axis_type="datetime", title='',tools=TOOLS0, x_range=ps[0].x_range)
 # holds labels
 pl = figure(width=WIDTH, height=HEIGHT1, x_axis_type="datetime", title='',tools="box_select",toolbar_location=None, y_axis_type=None,x_range=ps[0].x_range, y_range=(0,0.4), active_drag="box_select")
 pl.ygrid.grid_line_color = None
@@ -312,8 +313,15 @@ def draw_ts(p, cols, source, COLORS, ptype):
     #bottom plot: bars
     if ptype == "bar":
         for col in cols:
-            p.vbar(x='DateTime', top=col, width=2,
-                fill_color=COLORS[col], fill_alpha=1, line_color=COLORS[col], legend_label=col, name=col, source=source, nonselection_fill_alpha=1)# somehow non-selection alpha does not work
+            ns_fill_alpha=0.9
+            select_color = COLORS[col]
+            width = 2           
+            if col == select_voi.value:
+                ns_fill_alpha=0.2
+                select_color = "orange"
+                width = 3.5
+            p.vbar(x='DateTime', top=col, width=width,
+                fill_color=COLORS[col], fill_alpha=1, line_color=COLORS[col], selection_fill_color=select_color, legend_label=col, name=col, source=source, nonselection_fill_alpha=ns_fill_alpha)# somehow non-selection alpha does not work
 # from datetime import datetime as dt
 # source.data["DateTime"][0].timestamp()*1000
 # pd.Timestamp(source.data["DateTime"][0])*1000
