@@ -1,3 +1,8 @@
+### FIXING DATA SAVING BUG
+# .copy()
+# bokeh source.update_DataSource o.ä.
+# print source.data vs. outdata vs data
+
 import os
 import pandas as pd
 import numpy as np
@@ -57,7 +62,7 @@ def cb_new_data(attrname, old, new):
     cols0 = INITIALCOLS + multi_list0.value + multi_list1.value
     cols_pr = ["pr_"+c for c in cols0]
     alldata = pd.concat([data,data_pr], axis=1)
-    source.data = alldata.loc[:,cols0+cols_pr]
+    source.data = alldata.loc[:,cols0+cols_pr].copy()
     print("updated datasource")
     # update xlim of first plot (rest follows)
     ps[0].x_range.update(start=data.DateTime[0], end = data.DateTime[10000])
@@ -157,9 +162,9 @@ def cb_delete_all_labels():
 # save all labels of current month to feather-file
 def cb_save_all_labels(old=None):
     # old: if called via cb_select_ym, save old data using old ym
-    outdata = source.to_df()
+    outdata = source.to_df().copy()
     outdata = outdata.loc[:,outdata.columns.str.contains("_Label")]
-    data.loc[:,outdata.columns] = outdata
+    data.loc[:,outdata.columns] = outdata.copy()
     ym = old if old else select_ym.value
     print(f"Old from selection: {old}")
     print(f"Saving to: {ym}")
