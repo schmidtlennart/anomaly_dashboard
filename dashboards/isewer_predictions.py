@@ -3,6 +3,10 @@
 # bokeh source.update_DataSource o.ä.
 # print source.data vs. outdata vs data
 
+### TODOs
+# Make refresh buttons worl to set xlims+ylims
+# reset ylim when new data is loaded
+
 import os
 import pandas as pd
 import numpy as np
@@ -13,6 +17,7 @@ from bokeh.models.tools import HoverTool, BoxSelectTool
 from bokeh.models import ColumnDataSource, RangeTool, MultiChoice, Select, MultiSelect, Spacer,Button, RadioButtonGroup, Band, CDSView, BooleanFilter, BoxAnnotation, Legend, LegendItem
 from bokeh.palettes import Turbo256#Category20
 from bokeh.transform import linear_cmap
+
 
 # Create dict of input file paths
 FILES = {}
