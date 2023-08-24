@@ -3,9 +3,9 @@
 # bokeh source.update_DataSource o.ä.
 # print source.data vs. outdata vs data
 
-### TODOs
-# Make refresh buttons worl to set xlims+ylims
-# reset ylim when new data is loaded
+##TODO:
+# - revert temporary datetime fix in initial data loading & cb_new_data
+# fix zooming: resetting, separate x&y zooming/manual
 
 import os
 import pandas as pd
@@ -61,7 +61,11 @@ def cb_new_data(attrname, old, new):
     #predictions
     data_pr = pd.read_feather(FILES_PR[new])#columns=read_cols
     print("data_pr loaded") 
-    data_pr.DateTime = pd.to_datetime(data_pr.DateTime)# no need to set format because done in "011_load_to_feather.py"
+    #data_pr.DateTime = pd.to_datetime(data_pr.DateTime)# no need to set format because done in "011_load_to_feather.py"
+    
+    ################# TEMPORARY FIX FOR DATETIME
+    data_pr["DateTime"] = pd.to_datetime(data.DateTime)# no need to set format because done in "011_load_to_feather.py"
+    ################# !!!!
     data_pr.columns = ["pr_"+c for c in data_pr.columns]
 
     cols0 = INITIALCOLS + multi_list0.value + multi_list1.value
@@ -191,7 +195,10 @@ data.DateTime = pd.to_datetime(data.DateTime)# no need to set format because don
 # predictions
 data_pr = pd.read_feather(FILES_PR[select_ym.value])#columns=read_cols
 print("data_pr loaded") 
-data_pr.DateTime = pd.to_datetime(data_pr.DateTime)# no need to set format because done in "011_load_to_feather.py"
+
+####################TEMPORARY FIX
+data_pr["DateTime"] = pd.to_datetime(data.DateTime)# no need to set format because done in "011_load_to_feather.py"
+####################!!
 
 # reduce both to the inner join set of columns, i.e. also remove labels
 cols_joint = list(set(data.columns.to_list())& set(data_pr.columns.to_list()))
