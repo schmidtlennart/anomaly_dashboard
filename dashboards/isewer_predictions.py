@@ -14,10 +14,24 @@ import random
 from bokeh.plotting import figure, curdoc, show
 from bokeh.layouts import column, row
 from bokeh.models.tools import HoverTool, BoxSelectTool
-from bokeh.models import ColumnDataSource, RangeTool, MultiChoice, Select, MultiSelect, Spacer,Button, RadioButtonGroup, Band, CDSView, BooleanFilter, BoxAnnotation, Legend, LegendItem
+from bokeh.models import ColumnDataSource, RangeTool, MultiChoice, Select, MultiSelect, Spacer,Button, Range1d, RadioButtonGroup, Band, CDSView, BooleanFilter, BoxAnnotation, Legend, LegendItem
 from bokeh.palettes import Turbo256#Category20
 from bokeh.transform import linear_cmap
 
+# import bokeh as bk
+# t = bk.models.tools.ResetTool()
+# dir(t.update(start=10, end=20))
+# f = figure()
+# dir(f)
+
+# from bokeh.models import DataRange1d
+# r2 = DataRange1d()
+# f.x_range.reset_start
+
+# r = Range1d(start=0, end=10)
+# r.reset_start = 2
+
+# .update(**{"reset_start":0})
 
 # Create dict of input file paths
 FILES = {}
@@ -64,7 +78,7 @@ def cb_new_data(attrname, old, new):
     #data_pr.DateTime = pd.to_datetime(data_pr.DateTime)# no need to set format because done in "011_load_to_feather.py"
     
     ################# TEMPORARY FIX FOR DATETIME
-    data_pr["DateTime"] = pd.to_datetime(data.DateTime)# no need to set format because done in "011_load_to_feather.py"
+    #data_pr["DateTime"] = pd.to_datetime(data.DateTime)# no need to set format because done in "011_load_to_feather.py"
     ################# !!!!
     data_pr.columns = ["pr_"+c for c in data_pr.columns]
 
@@ -197,7 +211,7 @@ data_pr = pd.read_feather(FILES_PR[select_ym.value])#columns=read_cols
 print("data_pr loaded") 
 
 ####################TEMPORARY FIX
-data_pr["DateTime"] = pd.to_datetime(data.DateTime)# no need to set format because done in "011_load_to_feather.py"
+#data_pr["DateTime"] = pd.to_datetime(data.DateTime)# no need to set format because done in "011_load_to_feather.py"
 ####################!!
 
 # reduce both to the inner join set of columns, i.e. also remove labels
@@ -273,8 +287,8 @@ button_save_all_labels.on_event('button_click', cb_save_all_labels)
 
 
 ### CREATE PLOTS
-TOOLS0 = "pan,box_zoom,wheel_zoom,box_select,reset"#
-TOOLS1 = "pan,box_zoom,wheel_zoom,reset"#
+TOOLS0 = "pan,box_zoom,ywheel_zoom,box_select,reset"#
+TOOLS1 = "pan,box_zoom,ywheel_zoom,reset"#
 WIDTH, HEIGHT = 1500,350
 HEIGHT1 = 100
 # get one color for each variable
@@ -292,7 +306,7 @@ COLORS = dict(zip(all_cols,color_seq))
 ps = [[],[]]#holds timeseries
 xleft = data.DateTime[0]
 xright = data.DateTime[10000]
-ps[0] = figure(width=WIDTH, height=HEIGHT, x_axis_type="datetime", title='',tools=TOOLS0,x_range=(xleft,xright), active_drag="pan", active_scroll="wheel_zoom")#, output_backend="webgl"#webgl=GPU acceleration, causes problems with vbar
+ps[0] = figure(width=WIDTH, height=HEIGHT, x_axis_type="datetime", title='',tools=TOOLS0,x_range=(xleft,xright), active_drag="pan", active_scroll="ywheel_zoom")#, output_backend="webgl"#webgl=GPU acceleration, causes problems with vbar
 ps[1] = figure(width=WIDTH, height=HEIGHT, x_axis_type="datetime", title='',tools=TOOLS1, x_range=ps[0].x_range)
 # holds labels
 pl = figure(width=WIDTH, height=HEIGHT1, x_axis_type="datetime", title='',tools="box_select",toolbar_location=None, y_axis_type=None,x_range=ps[0].x_range, y_range=(0,0.4), active_drag="box_select")

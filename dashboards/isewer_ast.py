@@ -173,6 +173,12 @@ def cb_save_all_labels(old=None):
     print(data.DateTime[:1])### HIER HAT ER IMMER NOCH APRIL, aber irgwie nur in dieser Funktion
     data.to_feather(FILES[ym])
     print("saved data")
+#reset plots, i.e. update x and y-limits of top plot, the rest follows
+def cb_reset_plots():
+    ps[0].x_range.update(start=data.DateTime[0], end = data.DateTime[10000])
+    ps[0].y_range.update(start=data., end = )
+    source.selected.indices = []
+
 
 ### SET UP WIDGETS #1
 ### Dropdown to choose year
@@ -247,8 +253,9 @@ button_save_all_labels.on_event('button_click', cb_save_all_labels)
 
 
 ### CREATE PLOTS
-TOOLS0 = "pan,box_zoom,wheel_zoom,box_select,reset"#
-TOOLS1 = "pan,box_zoom,wheel_zoom,reset"#
+### CREATE PLOTS
+TOOLS0 = "pan,box_zoom,ywheel_zoom,box_select,reset"#
+TOOLS1 = "pan,box_zoom,ywheel_zoom,reset"#
 WIDTH, HEIGHT = 1500,350
 HEIGHT1 = 100
 # get one color for each variable
@@ -261,7 +268,7 @@ COLORS = dict(zip(all_cols,color_seq))
 ps = [[],[]]#holds timeseries
 xleft = data.DateTime[0]
 xright = data.DateTime[10000]
-ps[0] = figure(width=WIDTH, height=HEIGHT, x_axis_type="datetime", title='',tools=TOOLS0,x_range=(xleft,xright), active_drag="pan", active_scroll="wheel_zoom")#, output_backend="webgl"#webgl=GPU acceleration, causes problems with vbar
+ps[0] = figure(width=WIDTH, height=HEIGHT, x_axis_type="datetime", title='',tools=TOOLS0,x_range=(xleft,xright), active_drag="pan", active_scroll="ywheel_zoom")#, output_backend="webgl"#webgl=GPU acceleration, causes problems with vbar
 ps[1] = figure(width=WIDTH, height=HEIGHT, x_axis_type="datetime", title='',tools=TOOLS0, x_range=ps[0].x_range)
 # holds labels
 pl = figure(width=WIDTH, height=HEIGHT1, x_axis_type="datetime", title='',tools="box_select",toolbar_location=None, y_axis_type=None,x_range=ps[0].x_range, y_range=(0,0.4), active_drag="box_select")
@@ -285,6 +292,10 @@ slider.circle(x='DateTime', size=3,y=select_voi.value,fill_color="darkgray",line
 slider.ygrid.grid_line_color = None
 slider.add_tools(range_tool)
 slider.toolbar.active_multi = range_tool
+
+# Button to reset plots 
+button_reset_plots = Button(label="Reset plot", button_type="danger", height=35, width=500,disabled=True)
+button_reset_plots.on_event('button_click', cb_reset_plots)
 
 
 ### PLOTTING FUNCTIONS
