@@ -41,26 +41,46 @@ for file in sorted(os.listdir(DATADIR)):
         FILES[file[:7]] = DATADIR+file
 #predictions
 FILES_PR = {}
-DATADIR_PR = "/data/isewer/data/predictions/by_year_month/by_month/"
+DATADIR_PR = "/data/isewer/data/classifications/by_year_month/by_month/"
 for file in sorted(os.listdir(DATADIR_PR)):
     if ("2022_" in file) | ("2021_" in file):#filter for 2021+2022
         FILES_PR[file[:7]] = DATADIR_PR+file
 
 INITIAL_FILE = "2021_06"
-INITIAL_VOI = "Niveau_RÜ_BerlinerAllee"
-LABELS = ["Sensor Anomaly", "System Anomaly", "Other"]
-LABELCOLORS = ["lightblue", "darkred","gray"]
+#INITIAL_VOI = "Niveau_RÜ_BerlinerAllee"
+INITIAL_VOI = "FSR_Rückwärts_RÜ_Hindenburgstraße"
+# different to encoding from labelling (nan, 0, 1), here nan, 0.1:sensor anomaly, 0.2:system anomaly, 0.3:other
+# classifications only hold na/0/1 but are recoded upon load
+# Check Label-Plot ylimits if including 0.1-0.3
+LABELS = ["Sensor Anomaly", "System Anomaly", "Other", "AE Anomaly"]
+LABELCOLORS = ["lightblue", "darkred","gray", "darkgreen"]
 
 
 ### WIDGET CALLBACKS
 # change month to be plotted
 
+# def cb_select_voi(attrname, old, new):
+#     # redraw plot 0 based on column selection to change visual selection behaviour as voi changes
+#     cols = multi_list0.value + multi_choice0.value
+#     draw_ts(ps[0], cols ,source,COLORS, ptype="circle")
+#     #redraw labels
+#     draw_labels()
+
 def cb_select_voi(attrname, old, new):
+    # if not yet in dataset, load original data, add predictions and labels
+    if new not in source.data.keys():
+        newcols = [new] + ["pr_"+new] + ["pr_"+new+"_Label"]
+        print("adding cols: \n")
+        print(newcols)
+        for nc in newcols:
+            source.data[nc] = alldata[nc]
+
     # redraw plot 0 based on column selection to change visual selection behaviour as voi changes
-    cols = multi_list0.value + multi_choice0.value
+    cols = multi_list0.value + multi_choice0.value + [new]
     draw_ts(ps[0], cols ,source,COLORS, ptype="circle")
     #redraw labels
-    #draw_labels()
+    draw_labels()
+
 
 def cb_new_data(attrname, old, new):
     print("updating data..")
@@ -81,10 +101,16 @@ def cb_new_data(attrname, old, new):
     #data_pr["DateTime"] = pd.to_datetime(data.DateTime)# no need to set format because done in "011_load_to_feather.py"
     ################# !!!!
     data_pr.columns = ["pr_"+c for c in data_pr.columns]
+    # recode labels 0 to np.nan forplotting
+    data_pr_plot = data_pr.copy()
+    data_pr_plot.loc[:,data_pr_plot.columns.str.contains("_Label")] = data_pr_plot.loc[:,data_pr_plot.columns.str.contains("_Label")].replace({0:np.nan})
 
     cols0 = INITIALCOLS + multi_list0.value + multi_list1.value
-    cols_pr = ["pr_"+c for c in cols0]
-    alldata = pd.concat([data,data_pr], axis=1)
+    cols_pr = ["pr_"+c for c in cols0] + ["pr_"+c+"_Label" for c in cols0]
+    # drop if "pr_DateTime_Label"
+    cols_pr = [c for c in cols_pr if not c=="pr_DateTime_Label"]
+    #add labels from predictions
+    alldata = pd.concat([data,data_pr_plot], axis=1)
     source.data = alldata.loc[:,cols0+cols_pr].copy()
     print("updated datasource")
     # update xlim of first plot (rest follows)
@@ -215,13 +241,17 @@ print("data_pr loaded")
 ####################!!
 
 # reduce both to the inner join set of columns, i.e. also remove labels
-cols_joint = list(set(data.columns.to_list())& set(data_pr.columns.to_list()))
+cols_joint_label = list(set(data.columns.to_list())& set(data_pr.columns.to_list()))
+# drop all with _Label
+cols_joint = [c for c in cols_joint_label if not c.endswith("_Label")]
 data = data.loc[:,cols_joint]
-data_pr = data_pr.loc[:,cols_joint]
-
+# add labels back in
+data_pr = data_pr.loc[:,cols_joint+cols_joint_label]
 # rename to make clear that its predicions
 data_pr.columns = ["pr_"+c for c in data_pr.columns]
-
+# recode labels 0 to np.nan forplotting
+data_pr_plot = data_pr.copy()
+data_pr_plot.loc[:,data_pr_plot.columns.str.contains("_Label")] = data_pr_plot.loc[:,data_pr_plot.columns.str.contains("_Label")].replace({0:np.nan})
 # define columns to be available for selection/loaded at start
 cols_values = data.columns
 # choose strang
@@ -229,13 +259,16 @@ mask0 = cols_values.str.contains("BerlinerAllee|Uferstraße|Hindenburgstraße|Vo
 # define available cols for all plots
 # all Niveaus
 OPTIONS0 = sorted(cols_values[mask0 & cols_values.str.contains("Niveau")].to_list())
-OPTIONS1 = sorted(cols_values[cols_values.str.contains("Niederschlag")].to_list()) + sorted(cols_values[mask0].to_list())
+OPTIONS1 = ["FSR_Rückwärts_RÜ_Hindenburgstraße"]+sorted(cols_values[cols_values.str.contains("Niederschlag")].to_list()) + sorted(cols_values[mask0].to_list())
 #intial columns are the above including labels of Option0
-INITIALCOLS = list(set(["DateTime"] + OPTIONS0 + OPTIONS1))# + [c+"_Label" for c in OPTIONS0]))
-INITIALCOLS_PR = ["pr_"+c for c in INITIALCOLS]
-
+INITIALCOLS = list(set(["DateTime"] + OPTIONS0 + OPTIONS1))
+INITIALCOLS_PR = ["pr_"+c for c in INITIALCOLS] + ["pr_" + c+"_Label" for c in INITIALCOLS]
+# drop if "pr_DateTime_Label"
+INITIALCOLS_PR = [c for c in INITIALCOLS_PR if not c=="pr_DateTime_Label"]
+print(INITIALCOLS_PR)
 ### merge predictions and observed data
-alldata = pd.concat([data,data_pr], axis=1)
+alldata = pd.concat([data,data_pr_plot], axis=1)
+
 source = ColumnDataSource(alldata.loc[:,INITIALCOLS+INITIALCOLS_PR])
 print("created datasource")
 # save column names
@@ -247,14 +280,14 @@ n_all_cols = len(all_cols)
 MULTI_LIST_WIDTH = 220
 
 # Dropdown to set Variable of interest to be labelled
-select_voi = Select(title="Variable of Interest", value=INITIAL_VOI, options=OPTIONS0)
+select_voi = Select(title="Variable of Interest", value=INITIAL_VOI, options=sorted(all_cols))#, options=OPTIONS0)
 select_voi.on_change("value", cb_select_voi)
 
 # Berliner Strang variables
 multi_choice0 = MultiChoice(value=["Niveau_RÜ_BerlinerAllee","Niveau_RÜ_Uferstraße"], options=OPTIONS0)
 multi_choice0.on_change("value", cb_new_cols0)
 # NSM Variables
-multi_choice1 = MultiChoice(value=["Niederschlag_Schwarzer_Steg"], options=OPTIONS1)
+multi_choice1 = MultiChoice(value=["FSR_Rückwärts_RÜ_Hindenburgstraße"], options=OPTIONS1)#"Niederschlag_Schwarzer_Steg"
 multi_choice1.on_change("value", cb_new_cols1)
 # Additional variables plot 1
 multi_list0 =  MultiSelect(options=sorted(all_cols), title="Strg+Click to deselect", size=23, width=MULTI_LIST_WIDTH)
@@ -298,7 +331,7 @@ os.environ['PYTHONHASHSEED']=str(seed)
 random.seed(seed)
 np.random.seed(seed)#to keep colors the same
 rand_seq = np.random.choice(n_all_cols,n_all_cols, replace=False)#randomize colors to get distiniguihsable colors from conitnous colormap
-palette = Turbo256*2# more than 256 variabelw
+palette = Turbo256*4# more than 256 variabelw
 color_seq = [palette[r] for r in rand_seq]
 COLORS = dict(zip(all_cols,color_seq))
 
@@ -309,7 +342,7 @@ xright = data.DateTime[10000]
 ps[0] = figure(width=WIDTH, height=HEIGHT, x_axis_type="datetime", title='',tools=TOOLS0,x_range=(xleft,xright), active_drag="pan", active_scroll="ywheel_zoom")#, output_backend="webgl"#webgl=GPU acceleration, causes problems with vbar
 ps[1] = figure(width=WIDTH, height=HEIGHT, x_axis_type="datetime", title='',tools=TOOLS1, x_range=ps[0].x_range)
 # holds labels
-pl = figure(width=WIDTH, height=HEIGHT1, x_axis_type="datetime", title='',tools="box_select",toolbar_location=None, y_axis_type=None,x_range=ps[0].x_range, y_range=(0,0.4), active_drag="box_select")
+pl = figure(width=WIDTH, height=HEIGHT1, x_axis_type="datetime", title='',tools="box_select",toolbar_location=None, y_axis_type=None,x_range=ps[0].x_range, y_range=(0,1), active_drag="box_select")
 pl.ygrid.grid_line_color = None
 
 # sizing to window (does not work)
@@ -366,22 +399,22 @@ def draw_ts(p, cols, source, COLORS, ptype):
 # source.data["DateTime"][0].timestamp()*1000
 # pd.Timestamp(source.data["DateTime"][0])*1000
 
-# def draw_labels():
-#     if pl.legend: 
-#         pl.legend.items = []
-#     pl.renderers.clear()
-#     var = select_voi.value+"_Label"
-#     cmap = linear_cmap(field_name=var, palette=LABELCOLORS, low=(0.1), high=0.3)
-#     pl.rect(x='DateTime', y=var, width=80000, height=1, source=source,#size=16
-#            fill_alpha=1, fill_color=cmap,line_color=None,#,#"color"
-#                 selection_color="orange")
-#     print("added label circles")
-#     # Hacky custom label legend these are a dummy glyphs to help draw the legend
-#     dummy_rs = [pl.circle(x=[0, 0], y=[0, 0], line_width=1, color=c,line_color=None, name='dummy_for_legend') for c in LABELCOLORS]
-#     legend = Legend(items=[LegendItem(label=l, renderers=[r]) for l,r in zip(LABELS,dummy_rs)],
-#         location="top_right", orientation="horizontal",
-#         border_line_color=None)
-#     pl.add_layout(legend)
+def draw_labels():
+    if pl.legend: 
+        pl.legend.items = []
+    pl.renderers.clear()
+    var = "pr_"+select_voi.value+"_Label"
+    cmap = linear_cmap(field_name=var, palette=LABELCOLORS, low=0.1, high=1)
+    pl.rect(x='DateTime', y=var, width=80000, height=4, source=source,#size=16
+           fill_alpha=1, fill_color=cmap,line_color=None,#,#"color"
+                selection_color="orange")
+    print("added label circles")
+    # Hacky custom label legend these are a dummy glyphs to help draw the legend
+    dummy_rs = [pl.circle(x=[0, 0], y=[0, 0], line_width=1, color=c,line_color=None, name='dummy_for_legend') for c in LABELCOLORS]
+    legend = Legend(items=[LegendItem(label=l, renderers=[r]) for l,r in zip(LABELS,dummy_rs)],
+        location="top_right", orientation="horizontal",
+        border_line_color=None)
+    pl.add_layout(legend)
 
 def plot_all(ps, source):
     # observed cols + predicted ones
@@ -391,22 +424,22 @@ def plot_all(ps, source):
         draw_ts(ps[p_i], cols[p_i],source,COLORS, ptype=PTYPES[p_i])
         ps[p_i].legend.location = "top_left"
         ps[p_i].legend.click_policy="hide"
-    #draw_labels()
-    # pl.legend.orientation = "horizontal"
-    # pl.legend.location = "top_right"
-    # pl.legend.border_line_color = None
+    draw_labels()
+    pl.legend.orientation = "horizontal"
+    pl.legend.location = "top_right"
+    pl.legend.border_line_color = None
 
 # initial set-up
 plot_all(ps, source)
 
-row0 = row(select_ym)#, select_voi
+row0 = row(select_ym,select_voi)
 #row01 = row(label_buttons, button_delete_sel_labels)
 row1 = row(column(multi_list0, clearbutton0),column(multi_choice0, ps[0],pl))# button_delete_all_labels, button_save_all_labels
 row2 = row(column(multi_list1, clearbutton1),column(multi_choice1, ps[1]))
 row3 = row(Spacer(width=MULTI_LIST_WIDTH),slider)
 layout=column(row0,row1,row2,row3)#row01
 curdoc().add_root(layout)
-curdoc().title = "i-SEWER Predictions"# apply theme to current document
+curdoc().title = "i-SEWER Classifications"# apply theme to current document
 
 # import time
 # # for testing of datasource problem

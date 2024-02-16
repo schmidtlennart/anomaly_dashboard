@@ -176,7 +176,7 @@ def cb_save_all_labels(old=None):
 #reset plots, i.e. update x and y-limits of top plot, the rest follows
 def cb_reset_plots():
     ps[0].x_range.update(start=data.DateTime[0], end = data.DateTime[10000])
-    ps[0].y_range.update(start=data., end = )
+    #ps[0].y_range.update(start=data., end = )
     source.selected.indices = []
 
 
@@ -291,7 +291,7 @@ range_tool.overlay.fill_alpha = 0.2
 slider.circle(x='DateTime', size=3,y=select_voi.value,fill_color="darkgray",line_color=None, fill_alpha=0.7, source=source)#olors[0]
 slider.ygrid.grid_line_color = None
 slider.add_tools(range_tool)
-slider.toolbar.active_multi = range_tool
+#slider.toolbar.active_multi = range_tool
 
 # Button to reset plots 
 button_reset_plots = Button(label="Reset plot", button_type="danger", height=35, width=500,disabled=True)

@@ -8,4 +8,7 @@ fi
 if [ $1 = "preds" ]; then
     path="/home/schmidle/code/anomaly_selection_tool/dashboards/isewer_predictions.py"
 fi
+if [ $1 = "class" ]; then
+    path="/home/schmidle/code/anomaly_selection_tool/dashboards/isewer_classifications.py"
+fi
 bokeh serve --dev --port 8992 --allow-websocket-origin=localhost:9999 $path
