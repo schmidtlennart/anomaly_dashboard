@@ -130,15 +130,11 @@ multi_list0.on_change("value", cb_multi_list0)
 # Additional variables plot 2
 multi_list1 =  MultiSelect(options=sorted(all_cols), size=23, width=MULTI_LIST_WIDTH)
 multi_list1.on_change("value", cb_multi_list1)
+
 # Berliner Strang variables
-multi_choice0 = MultiChoice(value=["Niveau_RÜ_BerlinerAllee","Niveau_RÜ_Uferstraße"], options=OPTIONS0)
-# need to pass objcets to callback, so we wrap inside lambda
 args = {"multi_list0": multi_list0,"multi_list1": multi_list1, "source": source, "COLORS": COLORS, "ps": ps, "select_voi":select_voi}
-
-#lambda attr, old, new: cb_new_cols0(attr, old, new, **args)
-
+multi_choice0 = MultiChoice(value=["Niveau_RÜ_BerlinerAllee","Niveau_RÜ_Uferstraße"], options=OPTIONS0)
 multi_choice0.on_change("value", wcb_new_cols0(**args))# NSM Variables
-
 multi_choice1 = MultiChoice(value=["FSR_Rückwärts_RÜ_Hindenburgstraße"], options=OPTIONS1)#"Niederschlag_Schwarzer_Steg"
 multi_choice1.on_change("value", wcb_new_cols1(**args))
 
