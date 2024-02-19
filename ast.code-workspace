@@ -7,13 +7,10 @@
 			"path": "../../../../data/isewer"
 		},
 		{
-			"path": "../kit_anomaly_selection_tool"
-		},
-		{
 			"path": "../../../../data/isewer/data"
 		}
 	],
 	"settings": {
-		"python.defaultInterpreterPath": "/home/schmidle/VirtualEnvs/anomaly_selection_tool/bin/ipython3"
+		"python.defaultInterpreterPath": "/home/schmidle/VirtualEnvs/anomaly_selection_tool/bin/python"
 	}
 }
