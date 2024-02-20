@@ -269,7 +269,7 @@ print(INITIALCOLS_PR)
 ### merge predictions and observed data
 alldata = pd.concat([data,data_pr_plot], axis=1)
 
-source = ColumnDataSource(alldata.loc[:,INITIALCOLS+INITIALCOLS_PR])
+source = ColumnDataSource(alldata)
 print("created datasource")
 # save column names
 all_cols = data.columns.to_list() + data_pr.columns.to_list()

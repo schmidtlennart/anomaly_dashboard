@@ -30,24 +30,23 @@ def create_colors(all_cols):
 
 
 ### PLOTTING FUNCTIONS
-def wdraw_ts(p, cols, source, select_voi, COLORS, **kwargs):
+def wdraw_ts(source, COLORS, **kwargs):
     # closure only keeps variable keywords
-    def draw_ts(p, cols, ptype, select_voi,**kwargs):
+    def draw_ts(p, current_cols, ptype, current_voi,**kwargs):
         # Plots either one of the timeseries plots
         # ptype: "circle" or "bar", plotting type
-        cols_pr = ["pr_"+c for c in cols]
-        cols = cols + cols_pr
+        plotcols = current_cols + ["pr_"+c for c in current_cols]
         if p.legend: 
             p.legend.items = []
         p.renderers.clear()
         # top plot: circles
         if ptype == "circle":
-            for col in cols:
+            for col in plotcols:
                 nonselect_alpha = 1
                 select_color = COLORS[col]
                 size=3
                 # if col = voi enable changing appearance of points
-                if col == select_voi.value:
+                if col == current_voi:
                     nonselect_alpha = 1
                     select_color = "orange"
                     size = 3
@@ -58,17 +57,18 @@ def wdraw_ts(p, cols, source, select_voi, COLORS, **kwargs):
                                 selection_color=select_color)
         #bottom plot: bars
         if ptype == "bar":
-            for col in cols:
+            for col in plotcols:
                 p.vbar(x='DateTime', top=col, width=2,
                     fill_color=COLORS[col], fill_alpha=1, line_color=COLORS[col], legend_label=col, name=col, source=source, nonselection_fill_alpha=1)# somehow non-selection alpha does not work
     return draw_ts
 
-def wdraw_labels(pl, source, select_voi):
-    def draw_labels():
+def wdraw_labels(pl, source):
+    # closure so that I can run this inside callback without passing anything
+    def draw_labels(current_voi):
         if pl.legend: 
             pl.legend.items = []
         pl.renderers.clear()
-        var = "pr_"+select_voi.value+"_Label"
+        var = "pr_"+current_voi.value+"_Label"
         cmap = linear_cmap(field_name=var, palette=LABELCOLORS, low=0.1, high=1)
         pl.rect(x='DateTime', y=var, width=80000, height=4, source=source,#size=16
             fill_alpha=1, fill_color=cmap,line_color=None,#,#"color"
@@ -82,15 +82,15 @@ def wdraw_labels(pl, source, select_voi):
         pl.add_layout(legend)
     return draw_labels
 
-def plot_all(ps, pl, source, select_voi, multi_choice0, multi_list0, multi_choice1, multi_list1):
+def plot_all(ps, pl, source, current_voi, current_cols0, current_cols1, COLORS, select_voi):
     # observed cols + predicted ones
-    cols = [multi_choice0.value+multi_list0.value, multi_choice1.value+multi_list1.value]
+    cols = [current_cols0, current_cols1]
     PTYPES = ["circle","bar"]
     for p_i in range(len(ps)):
-        draw_ts(ps[p_i], cols[p_i],source,COLORS, ptype=PTYPES[p_i], select_voi=select_voi)
+        draw_ts(ps[p_i], cols[p_i], ptype=PTYPES[p_i], current_voi=current_voi)
         ps[p_i].legend.location = "top_left"
         ps[p_i].legend.click_policy="hide"
-    draw_labels(pl, source, select_voi)
+    draw_labels(current_voi)
     pl.legend.orientation = "horizontal"
     pl.legend.location = "top_right"
     pl.legend.border_line_color = None

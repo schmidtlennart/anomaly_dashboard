@@ -23,7 +23,7 @@ from isewer_ast.callbacks import *
 from isewer_ast.constants import *
 from isewer_ast.helpers import get_filenames, columns_to_pr_label
 from isewer_ast.plotting import wdraw_ts, wdraw_labels, create_colors
-from isewer_ast.dashboard_elements import create_plot_objects
+from isewer_ast.dashboard_elements import create_plot_objects, create_widgets, create_buttons
 # read montly input file names
 FILES, FILES_PR = [get_filenames(f) for f in [DATADIR, DATADIR_CL]]
 
@@ -54,10 +54,9 @@ alldata = pd.concat([data,data_pr_plot], axis=1)
 source = ColumnDataSource(alldata.loc[:,columns_to_pr_label([INITIAL_COLS0, INITIAL_COLS1])])
 print("created datasource")
 
+COLORS = create_colors(alldata.columns.to_list())
 
-
-COLORS = create_colors(data.columns.to_list() + data_pr.columns.to_list())
-# central variables to hold variables currently in plots 0 and 1
+# dynamic variables to hold variables currently in plots 0 and 1
 # accessed inside functions also
 current_cols0 = INITIAL_COLS0
 current_cols1 = INITIAL_COLS1
@@ -68,11 +67,11 @@ current_voi = INITIAL_VOI
 ps, pl, slider = create_plot_objects(data, current_voi)
 
 ################## WIDGETS & BUTTONS #############################
-select_ym, select_voi, multi_list0, multi_list1, multi_choice0, multi_choice1 = create_widgets(all_cols, OPTIONS0, OPTIONS1)
+select_ym, select_voi, multi_list0, multi_list1, multi_choice0, multi_choice1 = create_widgets(alldata.columns, INITIAL_COLS0, INITIAL_COLS1)
 clearbutton0, clearbutton1, label_buttons, button_delete_sel_labels, button_delete_all_labels, button_save_all_labels = create_buttons()
 
 # Set up plotting functions
-plot_args = {"ps": ps, "pl": pl, "source": source, "select_voi": select_voi, "multi_choice0": multi_choice0, "multi_list0": multi_list0, "multi_choice1": multi_choice1, "multi_list1": multi_list1}
+plot_args = {"ps": ps, "pl": pl, "source": source, "current_voi": current_voi, "current_cols0":current_cols0, "current_cols1":current_cols1}
 #plot_all(ps, pl, source, select_voi, multi_choice0, multi_list0, multi_choice1, multi_list1)
 # create plotting functions from closure so I dont have to pass all objects to all callbacks
 draw_labels = wdraw_labels(**plot_args)
@@ -81,23 +80,23 @@ draw_ts = wdraw_ts(**plot_args)
 #### CALLBACKS
 # set callbacks (need above plotting functions from global scope)
 # Dropdown to set Variable of interest to be labelled
-voi_args = {"source": source, "all_cols0":all_cols, "ps": ps, "pl": pl, "COLORS": COLORS}
-args = {"multi_list0": multi_list0,"multi_list1": multi_list1, "source": source, "COLORS": COLORS, "ps": ps, "pl":pl, "select_voi":select_voi}
-# Labelling actions only allowed if data is selected
-source.selected.on_change('indices', cb_selection_change)
+args = {"source": source, "COLORS": COLORS, "ps": ps, "pl":pl, "current_voi":current_voi, "current_cols0":current_cols0, "current_cols1":current_cols1}
 
-select_ym.on_change("value",cb_new_data)
-select_voi.on_change("value", wcb_select_voi(**voi_args))
-multi_list0.on_change("value", cb_multi_list0)
-multi_list1.on_change("value", cb_multi_list1)
+# Labelling actions only allowed if data is selected
+source.selected.on_change('indices', wcb_selection_change(**args))
+
+select_ym.on_change("value",cb_new_data)#change of month
+select_voi.on_change("value", wcb_select_voi(**args))#change of Variable of Interest
+multi_list0.on_change("value", wcb_multi_list0(**args))# change of selection in multilist0
+multi_list1.on_change("value", wcb_multi_list1(**args))# change of selection in multilist1
 
 # Button Callbacks
 #clearbutton0.on_event('button_click', cb_clearbutton0)
 #clearbutton1.on_event('button_click', cb_clearbutton1)
 #label_buttons.on_change("active", cb_set_labels)
-button_delete_sel_labels.on_event('button_click', cb_delete_sel_labels)
-button_delete_all_labels.on_event('button_click', cb_delete_all_labels)
-button_save_all_labels.on_event('button_click', cb_save_all_labels)
+# button_delete_sel_labels.on_event('button_click', cb_delete_sel_labels)
+# button_delete_all_labels.on_event('button_click', cb_delete_all_labels)
+# button_save_all_labels.on_event('button_click', cb_save_all_labels)
 
 ### START SERVER
 plot_all(**plot_args)
