@@ -8,20 +8,23 @@ from bokeh.plotting import figure
 
 from isewer_ast.plotting import draw_ts, draw_labels, plot_all, create_colors
 
-def cb_select_voi(attrname, old, new):
-    # if not yet in dataset, load original data, add predictions and labels
-    if new not in source.data.keys():
-        newcols = [new] + ["pr_"+new] + ["pr_"+new+"_Label"]
-        print("adding cols: \n")
-        print(newcols)
-        for nc in newcols:
-            source.data[nc] = alldata[nc]
+def wcb_select_voi(source, alldata,all_cols0, ps, **kwargs):
+    def cb_select_voi(attrname, old, new):
+        # if not yet in dataset, load original data, add predictions and labels
+        if new not in source.data.keys():
+            newcols = [new] + ["pr_"+new] + ["pr_"+new+"_Label"]
+            print("adding cols: \n")
+            print(newcols)
+            for nc in newcols:
+                source.data[nc] = alldata[nc]
 
-    # redraw plot 0 based on column selection to change visual selection behaviour as voi changes
-    cols = multi_list0.value + multi_choice0.value + [new]
-    draw_ts(ps[0], cols ,source,COLORS, ptype="circle")
-    #redraw labels
-    draw_labels()
+        # update allcols0
+        all_cols0 = all_cols0 + [new]
+        # redraw plot 0 based on column selection to change visual selection behaviour as voi changes
+        draw_ts(source=source, p=ps[0], cols=all_cols0, select_voi=new, ptype="circle", **kwargs)
+        #redraw labels
+        draw_labels(source=source, select_voi=new, **kwargs)
+    return cb_select_voi
 
 
 def cb_new_data(attrname, old, new):
@@ -83,42 +86,46 @@ def wcb_new_cols1(multi_list1,ps,**kwargs):
         draw_ts(ps[1], cols, ptype="bar", **kwargs)
     return cb_new_cols1
 
+def wcb_multi_list0(source, alldata, ps, current_cols0, **kwargs):
+    def cb_multi_list0 (attrname, old, new,):
+        # add respective columns to datasource
+        newcols = list(set(new)-set(source.data.keys()))
+        # add predictions too
+        newcols = newcols + ["pr_"+c for c in newcols]
+        print("adding cols: \n")
+        print(newcols)
+        for nc in newcols:
+            source.data[nc] = alldata[nc]
+        # add all cols from this list to multichoice0.value & plot 0 redraw
+        current_cols0 = current_cols0 + [new]
+        draw_ts(p=ps[0], cols=current_cols0 ,source=source, ptype="circle")  
+    return cb_multi_list0
 
-def cb_multi_list0 (attrname, old, new,):
-    # add respective columns to datasource
-    newcols = list(set(new)-set(source.data.keys()))
-    # add predictions too
-    newcols = newcols + ["pr_"+c for c in newcols]
-    print("adding cols: \n")
-    print(newcols)
-    for nc in newcols:
-        source.data[nc] = alldata[nc]
-    # add all cols from this list to multichoice0.value & plot 0 redraw
-    cols = multi_choice0.value + new
-    draw_ts(ps[0], cols ,source,COLORS, ptype="circle")  
+def wcb_multi_list1(source, alldata, ps, current_cols1, **kwargs):
+    def cb_multi_list1 (attrname, old, new):
+        # add respective columns to datasource (if not existant yet)
+        # add respective columns to datasource
+        newcols = list(set(new)-set(source.data.keys()))
+        # add predictions too
+        newcols = newcols + ["pr_"+c for c in newcols]
+        print("adding cols: \n")
+        print(newcols)
+        for nc in newcols:
+            source.data[nc] = alldata[nc]    # add all cols from this list to multichoice1.value & plot 1 redraw
+        current_cols1 = current_cols1 + [new]
+        draw_ts(p=ps[1], cols=current_cols1 ,source=source, ptype="bar")  
+    return cb_multi_list1
 
-def cb_multi_list1 (attrname, old, new):
-    # add respective columns to datasource (if not existant yet)
-    # add respective columns to datasource
-    newcols = list(set(new)-set(source.data.keys()))
-    # add predictions too
-    newcols = newcols + ["pr_"+c for c in newcols]
-    print("adding cols: \n")
-    print(newcols)
-    for nc in newcols:
-        source.data[nc] = alldata[nc]    # add all cols from this list to multichoice1.value & plot 1 redraw
-    cols = multi_choice1.value + new
-    draw_ts(ps[1], cols ,source,COLORS, ptype="bar")  
-
-def cb_clearbutton0():
+def cb_clearbutton0(multi_list0):
     # empty multilist and replot only multicolumn selections
     multi_list0.value = []
-    draw_ts(ps[0], multi_choice0.value ,source,COLORS, ptype="circle")
+    # is this really needed? shoud trigger .on_change cb
+    #draw_ts(ps[0], cols=[],source,COLORS, ptype="circle")
 
-def cb_clearbutton1():
+def cb_clearbutton1(multi_list1):
     # empty multilist and replot only multicolumn selections
     multi_list1.value = []
-    draw_ts(ps[1], multi_choice1.value ,source,COLORS, ptype="bar")
+    #draw_ts(ps[1], multi_choice1.value ,source,COLORS, ptype="bar")
 
 def cb_selection_change (attrname, old, new):
         label_buttons.disabled=False

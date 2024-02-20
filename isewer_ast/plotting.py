@@ -30,55 +30,57 @@ def create_colors(all_cols):
 
 
 ### PLOTTING FUNCTIONS
-def draw_ts(p, cols, source, COLORS, ptype, select_voi,**kwargs):
-    # Plots either one of the timeseries plots
-    # ptype: "circle" or "bar", plotting type
-    cols_pr = ["pr_"+c for c in cols]
-    cols = cols + cols_pr
-    if p.legend: 
-        p.legend.items = []
-    p.renderers.clear()
-    # top plot: circles
-    if ptype == "circle":
-        for col in cols:
-            nonselect_alpha = 1
-            select_color = COLORS[col]
-            size=3
-            # if col = voi enable changing appearance of points
-            if col == select_voi.value:
+def wdraw_ts(p, cols, source, select_voi, COLORS, **kwargs):
+    # closure only keeps variable keywords
+    def draw_ts(p, cols, ptype, select_voi,**kwargs):
+        # Plots either one of the timeseries plots
+        # ptype: "circle" or "bar", plotting type
+        cols_pr = ["pr_"+c for c in cols]
+        cols = cols + cols_pr
+        if p.legend: 
+            p.legend.items = []
+        p.renderers.clear()
+        # top plot: circles
+        if ptype == "circle":
+            for col in cols:
                 nonselect_alpha = 1
-                select_color = "orange"
-                size = 3
-            p.circle(x='DateTime', y=col, size=size,
-                            fill_color=COLORS[col], hover_fill_color="firebrick",
-                            fill_alpha=1, hover_alpha=0.95,
-                            line_color=None, hover_line_color="white", legend_label=col, name=col, source=source, nonselection_fill_alpha=nonselect_alpha,
-                             selection_color=select_color)
-    #bottom plot: bars
-    if ptype == "bar":
-        for col in cols:
-            p.vbar(x='DateTime', top=col, width=2,
-                fill_color=COLORS[col], fill_alpha=1, line_color=COLORS[col], legend_label=col, name=col, source=source, nonselection_fill_alpha=1)# somehow non-selection alpha does not work
-# from datetime import datetime as dt
-# source.data["DateTime"][0].timestamp()*1000
-# pd.Timestamp(source.data["DateTime"][0])*1000
+                select_color = COLORS[col]
+                size=3
+                # if col = voi enable changing appearance of points
+                if col == select_voi.value:
+                    nonselect_alpha = 1
+                    select_color = "orange"
+                    size = 3
+                p.circle(x='DateTime', y=col, size=size,
+                                fill_color=COLORS[col], hover_fill_color="firebrick",
+                                fill_alpha=1, hover_alpha=0.95,
+                                line_color=None, hover_line_color="white", legend_label=col, name=col, source=source, nonselection_fill_alpha=nonselect_alpha,
+                                selection_color=select_color)
+        #bottom plot: bars
+        if ptype == "bar":
+            for col in cols:
+                p.vbar(x='DateTime', top=col, width=2,
+                    fill_color=COLORS[col], fill_alpha=1, line_color=COLORS[col], legend_label=col, name=col, source=source, nonselection_fill_alpha=1)# somehow non-selection alpha does not work
+    return draw_ts
 
-def draw_labels(pl, source, select_voi):
-    if pl.legend: 
-        pl.legend.items = []
-    pl.renderers.clear()
-    var = "pr_"+select_voi.value+"_Label"
-    cmap = linear_cmap(field_name=var, palette=LABELCOLORS, low=0.1, high=1)
-    pl.rect(x='DateTime', y=var, width=80000, height=4, source=source,#size=16
-           fill_alpha=1, fill_color=cmap,line_color=None,#,#"color"
-                selection_color="orange")
-    print("added label circles")
-    # Hacky custom label legend these are a dummy glyphs to help draw the legend
-    dummy_rs = [pl.circle(x=[0, 0], y=[0, 0], line_width=1, color=c,line_color=None, name='dummy_for_legend') for c in LABELCOLORS]
-    legend = Legend(items=[LegendItem(label=l, renderers=[r]) for l,r in zip(LABELS,dummy_rs)],
-        location="top_right", orientation="horizontal",
-        border_line_color=None)
-    pl.add_layout(legend)
+def wdraw_labels(pl, source, select_voi):
+    def draw_labels():
+        if pl.legend: 
+            pl.legend.items = []
+        pl.renderers.clear()
+        var = "pr_"+select_voi.value+"_Label"
+        cmap = linear_cmap(field_name=var, palette=LABELCOLORS, low=0.1, high=1)
+        pl.rect(x='DateTime', y=var, width=80000, height=4, source=source,#size=16
+            fill_alpha=1, fill_color=cmap,line_color=None,#,#"color"
+                    selection_color="orange")
+        print("added label circles")
+        # Hacky custom label legend these are a dummy glyphs to help draw the legend
+        dummy_rs = [pl.circle(x=[0, 0], y=[0, 0], line_width=1, color=c,line_color=None, name='dummy_for_legend') for c in LABELCOLORS]
+        legend = Legend(items=[LegendItem(label=l, renderers=[r]) for l,r in zip(LABELS,dummy_rs)],
+            location="top_right", orientation="horizontal",
+            border_line_color=None)
+        pl.add_layout(legend)
+    return draw_labels
 
 def plot_all(ps, pl, source, select_voi, multi_choice0, multi_list0, multi_choice1, multi_list1):
     # observed cols + predicted ones
