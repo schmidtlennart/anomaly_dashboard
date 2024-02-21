@@ -36,7 +36,8 @@ def draw_ts(source, COLORS,p, current_cols, ptype, current_voi,**kwargs):
     plotcols = current_cols + ["pr_"+c for c in current_cols]
     if p.legend: 
         p.legend.items = []
-    p.renderers.clear()
+    #clear plot
+    p.renderers = []#.clear()
     # top plot: circles
     if ptype == "circle":
         for col in plotcols:

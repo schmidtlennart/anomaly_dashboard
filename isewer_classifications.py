@@ -68,7 +68,7 @@ current_voi = INITIAL_VOI
 ps, pl, slider = create_plot_objects(data, current_voi, source)
 
 ################## WIDGETS & BUTTONS #############################
-select_ym, select_voi, multi_list0, multi_list1 = create_widgets(FILES, alldata.columns, INITIAL_COLS0, INITIAL_COLS1)
+select_ym, select_voi, multi_list0, multi_list1 = create_widgets(FILES, data.columns, INITIAL_COLS0, INITIAL_COLS1)
 clearbutton0, clearbutton1, label_buttons, button_delete_sel_labels, button_delete_all_labels, button_save_all_labels = create_buttons()
 
 # Set up plotting functions
@@ -81,15 +81,27 @@ plot_args = {"ps": ps, "pl": pl, "source": source, "current_voi": current_voi, "
 # Labelling actions only allowed if data is selected
 source.selected.on_change('indices', wcb_selection_change(label_buttons, button_delete_sel_labels))
 
-args = {"source": source, "alldata":alldata, "COLORS": COLORS, "ps": ps, "pl":pl, "current_voi":current_voi, "current_cols0":current_cols0, "current_cols1":current_cols1}
+args = {"source": source, "alldata":alldata, "COLORS": COLORS, "ps": ps, "pl":pl, "current_voi":current_voi, "current_cols0":current_cols0, "current_cols1":current_cols1, "multi_list0":multi_list0}
 #select_ym.on_change("value",cb_new_data)#change of month
 select_voi.on_change("value", wcb_select_voi(**args))#change of Variable of Interest
 multi_list0.on_change("value", wcb_multi_list0(**args))# change of selection in multilist0
 multi_list1.on_change("value", wcb_multi_list1(**args))# change of selection in multilist1
 
 # Button Callbacks
-#clearbutton0.on_event('button_click', cb_clearbutton0)
-#clearbutton1.on_event('button_click', cb_clearbutton1)
+### THESE DO NOT WORK IF IMPORTED FROM CALLBACKS.PY
+def cb_clearbutton0():
+    # empty multilist and replot only multicolumn selections
+    multi_list0.value = []
+    #draw_ts(ps[0], multi_choice0.value ,source,COLORS, ptype="circle")
+
+def cb_clearbutton1():
+    # empty multilist and replot only multicolumn selections
+    multi_list1.value = []
+    #draw_ts(ps[1], multi_choice1.value ,source,COLORS, ptype="bar")
+
+
+clearbutton0.on_event('button_click', cb_clearbutton0)
+clearbutton1.on_event('button_click', cb_clearbutton1)
 #label_buttons.on_change("active", cb_set_labels)
 # button_delete_sel_labels.on_event('button_click', cb_delete_sel_labels)
 # button_delete_all_labels.on_event('button_click', cb_delete_all_labels)

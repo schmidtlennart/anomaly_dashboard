@@ -7,9 +7,9 @@ from bokeh.plotting import figure
 
 from isewer_ast.plotting import create_colors, draw_ts, draw_labels
 
-def wcb_select_voi(source, alldata, ps, current_cols0, current_voi, **kwargs):
+def wcb_select_voi(source, alldata, ps, multi_list0, current_cols0, current_voi, **kwargs):
     def cb_select_voi(attrname, old, new):
-        nonlocal source, current_cols0, current_voi
+        nonlocal source, multi_list0, current_cols0, current_voi
         # if not yet in dataset, load original data, add predictions and labels
         if new not in source.data.keys():
             newcols = [new] + ["pr_"+new] + ["pr_"+new+"_Label"]
@@ -17,13 +17,15 @@ def wcb_select_voi(source, alldata, ps, current_cols0, current_voi, **kwargs):
             print(newcols)
             for nc in newcols:
                 source.data[nc] = alldata[nc]
-
+        print(f"CURRENT COLS BEFORE ADDING VOI: \n {current_cols0}")
         # update allcols0
         current_cols0 = current_cols0 + [new]
+        print(f"CURRENT COLS AFTER ADDING VOI: \n {current_cols0}")
         current_voi = new# overwrite for global scope
-
+        # update multi_list0.value accordingly (triggers draw_ts)
+        multi_list0.value = current_cols0
         # redraw plot 0 based on column selection to change visual selection behaviour as voi changes
-        draw_ts(p=ps[0], current_cols=current_cols0, source=source, current_voi=current_voi, ptype="circle", **kwargs)
+        #draw_ts(p=ps[0], current_cols=current_cols0, source=source, current_voi=current_voi, ptype="circle", **kwargs)
         #redraw labels
         draw_labels(current_voi=current_voi, source=source,**kwargs)
     return cb_select_voi
@@ -88,6 +90,7 @@ def wcb_multi_list0(source, alldata, ps, current_cols0, **kwargs):
         # add all cols from this list to multichoice0.value & plot 0 redraw
         # changed here but reflects in global scope
         current_cols0 = new
+        print(f"CURRENT COLS: \n {current_cols0}")
         draw_ts(p=ps[0], current_cols=current_cols0 ,source=source, ptype="circle", **kwargs)
     return cb_multi_list0
 
@@ -106,16 +109,17 @@ def wcb_multi_list1(source, alldata, ps, current_cols1, **kwargs):
         draw_ts(p=ps[1], current_cols=current_cols1 ,source=source, ptype="bar",**kwargs)
     return cb_multi_list1
 
-def cb_clearbutton0(multi_list0):
-    # empty multilist and replot only multicolumn selections
-    multi_list0.value = []
-    # is this really needed? shoud trigger .on_change cb
-    #draw_ts(ps[0], cols=[],source,COLORS, ptype="circle")
+# MOVED TO MAINSCRIPT BECAUSE DONT CHANGE GLOBAL OBJECT
+# def cb_clearbutton0(multi_list0):
+#     # empty multilist and replot only multicolumn selections
+#     multi_list0.value = []
+#     # is this really needed? shoud trigger .on_change cb
+#     #draw_ts(ps[0], cols=[],source,COLORS, ptype="circle")
 
-def cb_clearbutton1(multi_list1):
-    # empty multilist and replot only multicolumn selections
-    multi_list1.value = []
-    #draw_ts(ps[1], multi_choice1.value ,source,COLORS, ptype="bar")
+# def cb_clearbutton1(multi_list1):
+#     # empty multilist and replot only multicolumn selections
+#     multi_list1.value = []
+#     #draw_ts(ps[1], multi_choice1.value ,source,COLORS, ptype="bar")
 
 def wcb_selection_change(label_buttons, button_delete_sel_labels, **kwargs):
     def cb_selection_change (attrname, old, new):

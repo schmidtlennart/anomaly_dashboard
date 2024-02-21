@@ -30,16 +30,16 @@ def create_plot_objects(data, current_voi, source):
     #slider.toolbar.active_multi = range_tool
     return ps, pl, slider
 
-def create_widgets(FILES, all_cols, INITAL_COLS0, INITIAL_COLS1):
+def create_widgets(FILES, cols, INITAL_COLS0, INITIAL_COLS1):
     # Set up widgets
     # Selector: Year/Month
     select_ym = Select(title="Year/Month", value=INITIAL_FILE, options=list(FILES.keys()))#value=list(FILES.keys())[0]
     # Selector: Variable of Interest
-    select_voi = Select(title="Variable of Interest", value=INITIAL_VOI, options=sorted(all_cols))#, options=OPTIONS0)
+    select_voi = Select(title="Variable of Interest", value=INITIAL_VOI, options=sorted(cols))#, options=OPTIONS0)
     # Additional variables plot 1
-    multi_list0 =  MultiSelect(options=sorted(all_cols), value=INITAL_COLS0, title="Strg+Click to deselect", size=23, width=MULTI_LIST_WIDTH)
+    multi_list0 =  MultiSelect(options=sorted(cols), value=INITAL_COLS0, title="Strg+Click to deselect", size=23, width=MULTI_LIST_WIDTH)
     # Additional variables plot 2
-    multi_list1 =  MultiSelect(options=sorted(all_cols), value=INITIAL_COLS1, size=23, width=MULTI_LIST_WIDTH)
+    multi_list1 =  MultiSelect(options=sorted(cols), value=INITIAL_COLS1, size=23, width=MULTI_LIST_WIDTH)
     return select_ym,select_voi, multi_list0, multi_list1
 
 def create_buttons():
