@@ -17,17 +17,18 @@ def wcb_select_voi(source, alldata, ps, multi_list0, current_cols0, current_voi,
             print(newcols)
             for nc in newcols:
                 source.data[nc] = alldata[nc]
-        print(f"CURRENT COLS BEFORE ADDING VOI: \n {current_cols0}")
+        #print(f"CURRENT COLS BEFORE ADDING VOI: \n {current_cols0}")
         # update allcols0
-        current_cols0 = current_cols0 + [new]
-        print(f"CURRENT COLS AFTER ADDING VOI: \n {current_cols0}")
+        #current_cols0 = current_cols0 + [new]# does not get updated
+        current_cols0 = multi_list0.value + [new]
+        #print(f"CURRENT COLS AFTER ADDING VOI: \n {current_cols0}")
         current_voi = new# overwrite for global scope
         # update multi_list0.value accordingly (triggers draw_ts)
-        multi_list0.value = current_cols0
+        multi_list0.value = current_cols0 #triggers draw_ts
         # redraw plot 0 based on column selection to change visual selection behaviour as voi changes
         #draw_ts(p=ps[0], current_cols=current_cols0, source=source, current_voi=current_voi, ptype="circle", **kwargs)
         #redraw labels
-        draw_labels(current_voi=current_voi, source=source,**kwargs)
+       # draw_labels(current_voi=current_voi, source=source,**kwargs)
     return cb_select_voi
 
 
@@ -74,11 +75,11 @@ def wcb_select_voi(source, alldata, ps, multi_list0, current_cols0, current_voi,
 #     print(data.DateTime[:1])
 
 
-def wcb_multi_list0(source, alldata, ps, current_cols0, **kwargs):
-    def cb_multi_list0 (attrname, old, new,):
+def wcb_multi_list0(source, alldata, ps, current_cols0, current_voi, **kwargs):
+    def cb_multi_list0 (attrname, old, new):
         # inside closure, variables from parent scope (i.e. wrapper function) are read-only unless explicitly declared nonlocal
         # so set as nonlocal as I do want to change them in global scope
-        nonlocal source, current_cols0
+        nonlocal source, current_cols0, current_voi
         # add respective columns to datasource
         newcols = list(set(new)-set(source.data.keys()))
         # add predictions too
@@ -89,9 +90,11 @@ def wcb_multi_list0(source, alldata, ps, current_cols0, **kwargs):
             source.data[nc] = alldata[nc]
         # add all cols from this list to multichoice0.value & plot 0 redraw
         # changed here but reflects in global scope
-        current_cols0 = new
+        print(f"ADDING CURRENT VOI: {current_voi}")
+        # always add current voi so it stays in the plot
+        current_cols0 = new + [current_voi]
         print(f"CURRENT COLS: \n {current_cols0}")
-        draw_ts(p=ps[0], current_cols=current_cols0 ,source=source, ptype="circle", **kwargs)
+        draw_ts(p=ps[0], current_cols=current_cols0 ,source=source, current_voi=current_voi, ptype="circle", **kwargs)
     return cb_multi_list0
 
 def wcb_multi_list1(source, alldata, ps, current_cols1, **kwargs):
