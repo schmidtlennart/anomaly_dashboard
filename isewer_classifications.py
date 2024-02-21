@@ -82,6 +82,7 @@ plot_args = {"ps": ps, "pl": pl, "source": source, "current_voi": current_voi, "
 source.selected.on_change('indices', wcb_selection_change(label_buttons, button_delete_sel_labels))
 
 args = {"source": source, "alldata":alldata, "COLORS": COLORS, "ps": ps, "pl":pl, "current_voi":current_voi, "current_cols0":current_cols0, "current_cols1":current_cols1, "multi_list0":multi_list0}
+ctx = {}
 #select_ym.on_change("value",cb_new_data)#change of month
 select_voi.on_change("value", wcb_select_voi(**args))#change of Variable of Interest
 multi_list0.on_change("value", wcb_multi_list0(**args))# change of selection in multilist0

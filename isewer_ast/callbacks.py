@@ -19,9 +19,12 @@ def wcb_select_voi(source, alldata, ps, multi_list0, current_cols0, current_voi,
                 source.data[nc] = alldata[nc]
         #print(f"CURRENT COLS BEFORE ADDING VOI: \n {current_cols0}")
         # update allcols0
+        #x = current_voi
         #current_cols0 = current_cols0 + [new]# does not get updated
         current_cols0 = multi_list0.value + [new]
         #print(f"CURRENT COLS AFTER ADDING VOI: \n {current_cols0}")
+        # CREATES NEW LIST current_voi
+        # would work if key of dict
         current_voi = new# overwrite for global scope
         # update multi_list0.value accordingly (triggers draw_ts)
         multi_list0.value = current_cols0 #triggers draw_ts
@@ -31,6 +34,18 @@ def wcb_select_voi(source, alldata, ps, multi_list0, current_cols0, current_voi,
        # draw_labels(current_voi=current_voi, source=source,**kwargs)
     return cb_select_voi
 
+def wcb_select_voi(ctx):
+    def cb_select_voi(attrname, old,new):
+        nonlocal ctx
+        source = ctx["source"]
+        
+        ctx["source"].data[new] = ctx["alldata"][new]
+        
+        ## update
+        ctx["source"] = source
+
+        ml = ctx["multi_list0"]
+        ml.value = [new]
 
 # def cb_new_data(attrname, old, new):
 #     print("updating data..")
