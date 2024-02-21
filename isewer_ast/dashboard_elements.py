@@ -3,7 +3,7 @@ from bokeh.models import RangeTool, HoverTool, Select, MultiSelect, MultiChoice,
 
 from isewer_ast.constants import *
 
-def create_plot_objects(data, current_voi):
+def create_plot_objects(data, current_voi, source):
     # Basic plot setup
     ps = [[],[]]#holds timeseries
     xleft = data.DateTime[0]

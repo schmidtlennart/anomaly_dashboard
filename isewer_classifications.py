@@ -22,7 +22,7 @@ from bokeh.palettes import Turbo256#Category20
 from isewer_ast.callbacks import *
 from isewer_ast.constants import *
 from isewer_ast.helpers import get_filenames, columns_to_pr_label
-from isewer_ast.plotting import wdraw_ts, wdraw_labels, create_colors
+from isewer_ast.plotting import create_colors, plot_all
 from isewer_ast.dashboard_elements import create_plot_objects, create_widgets, create_buttons
 # read montly input file names
 FILES, FILES_PR = [get_filenames(f) for f in [DATADIR, DATADIR_CL]]
@@ -51,7 +51,8 @@ data_pr_plot.loc[:,data_pr_plot.columns.str.contains("_Label")] = data_pr_plot.l
 
 ### merge predictions and observed data
 alldata = pd.concat([data,data_pr_plot], axis=1)
-source = ColumnDataSource(alldata.loc[:,columns_to_pr_label([INITIAL_COLS0, INITIAL_COLS1])])
+initial_load_cols = ["DateTime"] + columns_to_pr_label([INITIAL_COLS0, INITIAL_COLS1])
+source = ColumnDataSource(alldata.loc[:,initial_load_cols])
 print("created datasource")
 
 COLORS = create_colors(alldata.columns.to_list())
@@ -64,28 +65,24 @@ current_cols1 = INITIAL_COLS1
 current_voi = INITIAL_VOI
 
 ################## PLOTS #############################
-ps, pl, slider = create_plot_objects(data, current_voi)
+ps, pl, slider = create_plot_objects(data, current_voi, source)
 
 ################## WIDGETS & BUTTONS #############################
-select_ym, select_voi, multi_list0, multi_list1, multi_choice0, multi_choice1 = create_widgets(alldata.columns, INITIAL_COLS0, INITIAL_COLS1)
+select_ym, select_voi, multi_list0, multi_list1 = create_widgets(FILES, alldata.columns, INITIAL_COLS0, INITIAL_COLS1)
 clearbutton0, clearbutton1, label_buttons, button_delete_sel_labels, button_delete_all_labels, button_save_all_labels = create_buttons()
 
 # Set up plotting functions
-plot_args = {"ps": ps, "pl": pl, "source": source, "current_voi": current_voi, "current_cols0":current_cols0, "current_cols1":current_cols1}
-#plot_all(ps, pl, source, select_voi, multi_choice0, multi_list0, multi_choice1, multi_list1)
-# create plotting functions from closure so I dont have to pass all objects to all callbacks
-draw_labels = wdraw_labels(**plot_args)
-draw_ts = wdraw_ts(**plot_args)
+plot_args = {"ps": ps, "pl": pl, "source": source, "current_voi": current_voi, "current_cols0":current_cols0, "current_cols1":current_cols1, "COLORS":COLORS}
 
 #### CALLBACKS
 # set callbacks (need above plotting functions from global scope)
 # Dropdown to set Variable of interest to be labelled
-args = {"source": source, "COLORS": COLORS, "ps": ps, "pl":pl, "current_voi":current_voi, "current_cols0":current_cols0, "current_cols1":current_cols1}
 
 # Labelling actions only allowed if data is selected
-source.selected.on_change('indices', wcb_selection_change(**args))
+source.selected.on_change('indices', wcb_selection_change(label_buttons, button_delete_sel_labels))
 
-select_ym.on_change("value",cb_new_data)#change of month
+args = {"source": source, "alldata":alldata, "COLORS": COLORS, "ps": ps, "pl":pl, "current_voi":current_voi, "current_cols0":current_cols0, "current_cols1":current_cols1}
+#select_ym.on_change("value",cb_new_data)#change of month
 select_voi.on_change("value", wcb_select_voi(**args))#change of Variable of Interest
 multi_list0.on_change("value", wcb_multi_list0(**args))# change of selection in multilist0
 multi_list1.on_change("value", wcb_multi_list1(**args))# change of selection in multilist1
@@ -104,8 +101,8 @@ plot_all(**plot_args)
 ### DASHBOARD LAYOUT
 row0 = row(select_ym,select_voi)
 #row01 = row(label_buttons, button_delete_sel_labels)
-row1 = row(column(multi_list0, clearbutton0),column(multi_choice0, ps[0],pl))# button_delete_all_labels, button_save_all_labels
-row2 = row(column(multi_list1, clearbutton1),column(multi_choice1, ps[1]))
+row1 = row(column(multi_list0, clearbutton0),column(ps[0],pl))# button_delete_all_labels, button_save_all_labels
+row2 = row(column(multi_list1, clearbutton1),column(ps[1]))
 row3 = row(Spacer(width=MULTI_LIST_WIDTH),slider)
 layout=column(row0,row1,row2,row3)#row01
 curdoc().add_root(layout)

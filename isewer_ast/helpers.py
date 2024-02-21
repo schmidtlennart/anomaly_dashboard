@@ -9,7 +9,10 @@ def get_filenames(dir):
     return FILES
 
 def columns_to_pr_label(cols):
-    # turn columns into labels, predictions and their labels
+    # if list of lists, flatten
+    if isinstance(cols[0], list):
+        cols = [item for sublist in cols for item in sublist]
+   # turn columns into labels, predictions and their labels
     pr = ["pr_"+c for c in cols]
     label = ["pr_"+c+"_Label" for c in cols]
     return cols+pr+label

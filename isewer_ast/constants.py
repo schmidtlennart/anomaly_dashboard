@@ -3,7 +3,7 @@
 ### LAYOUT/DATA
 INITIAL_FILE = "2021_06"
 #INITIAL_VOI = "Niveau_RÜ_BerlinerAllee"
-INITIAL_VOI = "FSR_Rückwärts_RÜ_Hindenburgstraße
+INITIAL_VOI = "FSR_Rückwärts_RÜ_Hindenburgstraße"
 # Inital Columns"
 INITIAL_COLS0 = ["Niveau_RÜ_BerlinerAllee","Niveau_RÜ_Uferstraße"]
 INITIAL_COLS1 = ["FSR_Rückwärts_RÜ_Hindenburgstraße"]

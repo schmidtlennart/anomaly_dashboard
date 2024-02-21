@@ -1,15 +1,15 @@
 ### WIDGET CALLBACKS
-# change month to be plotted
 
 import pandas as pd
 import numpy as np
 from bokeh.models import ColumnDataSource
 from bokeh.plotting import figure
 
-from isewer_ast.plotting import draw_ts, draw_labels, plot_all, create_colors
+from isewer_ast.plotting import create_colors, draw_ts, draw_labels
 
-def wcb_select_voi(source, alldata, ps, current_voi, **kwargs):
+def wcb_select_voi(source, alldata, ps, current_cols0, current_voi, **kwargs):
     def cb_select_voi(attrname, old, new):
+        nonlocal source, current_cols0, current_voi
         # if not yet in dataset, load original data, add predictions and labels
         if new not in source.data.keys():
             newcols = [new] + ["pr_"+new] + ["pr_"+new+"_Label"]
@@ -23,9 +23,9 @@ def wcb_select_voi(source, alldata, ps, current_voi, **kwargs):
         current_voi = new# overwrite for global scope
 
         # redraw plot 0 based on column selection to change visual selection behaviour as voi changes
-        draw_ts(source=source, p=ps[0], cols=current_cols0, select_voi=new, ptype="circle", **kwargs)
+        draw_ts(p=ps[0], current_cols=current_cols0, source=source, current_voi=current_voi, ptype="circle", **kwargs)
         #redraw labels
-        draw_labels(current_voi=new)
+        draw_labels(current_voi=current_voi, source=source,**kwargs)
     return cb_select_voi
 
 
@@ -72,8 +72,11 @@ def wcb_select_voi(source, alldata, ps, current_voi, **kwargs):
 #     print(data.DateTime[:1])
 
 
-def wcb_multi_list0(source, alldata, ps, current_cols0, current_voi **kwargs):
+def wcb_multi_list0(source, alldata, ps, current_cols0, **kwargs):
     def cb_multi_list0 (attrname, old, new,):
+        # inside closure, variables from parent scope (i.e. wrapper function) are read-only unless explicitly declared nonlocal
+        # so set as nonlocal as I do want to change them in global scope
+        nonlocal source, current_cols0
         # add respective columns to datasource
         newcols = list(set(new)-set(source.data.keys()))
         # add predictions too
@@ -84,14 +87,14 @@ def wcb_multi_list0(source, alldata, ps, current_cols0, current_voi **kwargs):
             source.data[nc] = alldata[nc]
         # add all cols from this list to multichoice0.value & plot 0 redraw
         # changed here but reflects in global scope
-        current_cols0 = current_cols0 + [new]
-        draw_ts(p=ps[0], current_cols=current_cols0 ,source=source, ptype="circle", current_voi=current_voi)
+        current_cols0 = new
+        draw_ts(p=ps[0], current_cols=current_cols0 ,source=source, ptype="circle", **kwargs)
     return cb_multi_list0
 
-def wcb_multi_list1(source, alldata, ps, current_cols1, current_voi, **kwargs):
+def wcb_multi_list1(source, alldata, ps, current_cols1, **kwargs):
     def cb_multi_list1 (attrname, old, new):
+        nonlocal source, current_cols1
         # add respective columns to datasource (if not existant yet)
-        # add respective columns to datasource
         newcols = list(set(new)-set(source.data.keys()))
         # add predictions too
         newcols = newcols + ["pr_"+c for c in newcols]
@@ -99,8 +102,8 @@ def wcb_multi_list1(source, alldata, ps, current_cols1, current_voi, **kwargs):
         print(newcols)
         for nc in newcols:
             source.data[nc] = alldata[nc]    # add all cols from this list to multichoice1.value & plot 1 redraw
-        current_cols1 = current_cols1 + [new]
-        draw_ts(p=ps[1], current_cols=current_cols1 ,source=source,current_voi=current_voi, ptype="bar")
+        current_cols1 = new
+        draw_ts(p=ps[1], current_cols=current_cols1 ,source=source, ptype="bar",**kwargs)
     return cb_multi_list1
 
 def cb_clearbutton0(multi_list0):
@@ -113,7 +116,8 @@ def cb_clearbutton1(multi_list1):
     # empty multilist and replot only multicolumn selections
     multi_list1.value = []
     #draw_ts(ps[1], multi_choice1.value ,source,COLORS, ptype="bar")
-def wcb_selection_change(source, label_buttons, button_delete_sel_labels, **kwargs):
+
+def wcb_selection_change(label_buttons, button_delete_sel_labels, **kwargs):
     def cb_selection_change (attrname, old, new):
             label_buttons.disabled=False
             button_delete_sel_labels.disabled=False
