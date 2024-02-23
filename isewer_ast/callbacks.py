@@ -5,11 +5,13 @@ import numpy as np
 from bokeh.models import ColumnDataSource
 from bokeh.plotting import figure
 
-from isewer_ast.plotting import create_colors, draw_ts, draw_labels
+from isewer_ast.plotting import draw_ts, draw_labels
+from isewer_ast.helpers import create_data_source
+from isewer_ast.plotting import plot_all
 
-def wcb_select_voi(source, alldata, ps, multi_list0, current_cols0, current_voi, **kwargs):
+def wcb_select_voi(source, alldata, multi_list0, **kwargs):
     def cb_select_voi(attrname, old, new):
-        nonlocal source, multi_list0, current_cols0, current_voi
+        nonlocal source, multi_list0
         # if not yet in dataset, load original data, add predictions and labels
         if new not in source.data.keys():
             newcols = [new] + ["pr_"+new] + ["pr_"+new+"_Label"]
@@ -17,84 +19,34 @@ def wcb_select_voi(source, alldata, ps, multi_list0, current_cols0, current_voi,
             print(newcols)
             for nc in newcols:
                 source.data[nc] = alldata[nc]
-        #print(f"CURRENT COLS BEFORE ADDING VOI: \n {current_cols0}")
-        # update allcols0
-        #x = current_voi
-        #current_cols0 = current_cols0 + [new]# does not get updated
-        current_cols0 = multi_list0.value + [new]
-        #print(f"CURRENT COLS AFTER ADDING VOI: \n {current_cols0}")
-        # CREATES NEW LIST current_voi
-        # would work if key of dict
-        current_voi = new# overwrite for global scope
-        # update multi_list0.value accordingly (triggers draw_ts)
-        multi_list0.value = current_cols0 #triggers draw_ts
-        # redraw plot 0 based on column selection to change visual selection behaviour as voi changes
-        #draw_ts(p=ps[0], current_cols=current_cols0, source=source, current_voi=current_voi, ptype="circle", **kwargs)
+        multi_list0.value = multi_list0.value + [new] #triggers draw_ts
         #redraw labels
-       # draw_labels(current_voi=current_voi, source=source,**kwargs)
+        draw_labels(source=source,**kwargs)
     return cb_select_voi
 
-def wcb_select_voi(ctx):
-    def cb_select_voi(attrname, old,new):
-        nonlocal ctx
-        source = ctx["source"]
-        
-        ctx["source"].data[new] = ctx["alldata"][new]
-        
-        ## update
-        ctx["source"] = source
+def wcb_new_data(FILES, FILES_PR, source, multi_list0, multi_list1, alldata, allcols,ps,slider, **kwargs):
+    def cb_new_data(attrname, old, new):
+        nonlocal FILES, FILES_PR, source, multi_list0, multi_list1,alldata, allcols, ps, slider
+        print("updating data..")
+        current_cols = [multi_list0.value, multi_list1.value]
+        # overwriting global objects
+        source, alldata, allcols = create_data_source(FILES, FILES_PR, new, current_cols)
 
-        ml = ctx["multi_list0"]
-        ml.value = [new]
-
-# def cb_new_data(attrname, old, new):
-#     print("updating data..")
-#     ### save current data to file
-#     print(f"old: {old}")
-#     print(f"new: {new}")
-#     #cb_save_all_labels(old)
-#     ### Load new data
-#     data = pd.read_feather(FILES[new])#columns=read_cols
-#     print("data loaded") 
-#     data.DateTime = pd.to_datetime(data.DateTime)# no need to set format because done in "011_load_to_feather.py"
-#     #predictions
-#     data_pr = pd.read_feather(FILES_PR[new])#columns=read_cols
-#     print("data_pr loaded") 
-#     #data_pr.DateTime = pd.to_datetime(data_pr.DateTime)# no need to set format because done in "011_load_to_feather.py"
-    
-#     ################# TEMPORARY FIX FOR DATETIME
-#     #data_pr["DateTime"] = pd.to_datetime(data.DateTime)# no need to set format because done in "011_load_to_feather.py"
-#     ################# !!!!
-#     data_pr.columns = ["pr_"+c for c in data_pr.columns]
-#     # recode labels 0 to np.nan forplotting
-#     data_pr_plot = data_pr.copy()
-#     data_pr_plot.loc[:,data_pr_plot.columns.str.contains("_Label")] = data_pr_plot.loc[:,data_pr_plot.columns.str.contains("_Label")].replace({0:np.nan})
-
-#     cols0 = INITIALCOLS + multi_list0.value + multi_list1.value
-#     cols_pr = ["pr_"+c for c in cols0] + ["pr_"+c+"_Label" for c in cols0]
-#     # drop if "pr_DateTime_Label"
-#     cols_pr = [c for c in cols_pr if not c=="pr_DateTime_Label"]
-#     #add labels from predictions
-#     alldata = pd.concat([data,data_pr_plot], axis=1)
-#     source.data = alldata.loc[:,cols0+cols_pr].copy()
-#     print("updated datasource")
-#     # update xlim of first plot (rest follows)
-#     ps[0].x_range.update(start=data.DateTime[0], end = data.DateTime[10000])
-#     #print("updated plot limits")
-#     source.selected.indices = []
-#     #print("cleared selection")
-#     plot_all(ps, source)
-#     print("new head indices")
-#     print(source.data["DateTime"][:1])
-#     print("Data indices")
-#     print(data.DateTime[:1])
+        # update xlim of first plot (rest follows)
+        ps[0].x_range.update(start=alldata.DateTime[0], end = alldata.DateTime[10000])
+        slider.x_range.update(start=alldata.DateTime.iloc[0], end = alldata.DateTime.iloc[-1])
+        source.selected.indices = []
+        plot_all(ps = ps, source=source, multi_list0=multi_list0, multi_list1=multi_list1, **kwargs)
+        print("new head indices")
+        print(source.data["DateTime"][:1])
+    return cb_new_data
 
 
-def wcb_multi_list0(source, alldata, ps, current_cols0, current_voi, **kwargs):
+def wcb_multi_list0(source, alldata, ps, **kwargs):
     def cb_multi_list0 (attrname, old, new):
         # inside closure, variables from parent scope (i.e. wrapper function) are read-only unless explicitly declared nonlocal
         # so set as nonlocal as I do want to change them in global scope
-        nonlocal source, current_cols0, current_voi
+        nonlocal source
         # add respective columns to datasource
         newcols = list(set(new)-set(source.data.keys()))
         # add predictions too
@@ -103,18 +55,12 @@ def wcb_multi_list0(source, alldata, ps, current_cols0, current_voi, **kwargs):
         print(newcols)
         for nc in newcols:
             source.data[nc] = alldata[nc]
-        # add all cols from this list to multichoice0.value & plot 0 redraw
-        # changed here but reflects in global scope
-        print(f"ADDING CURRENT VOI: {current_voi}")
-        # always add current voi so it stays in the plot
-        current_cols0 = new + [current_voi]
-        print(f"CURRENT COLS: \n {current_cols0}")
-        draw_ts(p=ps[0], current_cols=current_cols0 ,source=source, current_voi=current_voi, ptype="circle", **kwargs)
+        draw_ts(p=ps[0], current_cols=new ,source=source, ptype="circle", **kwargs)
     return cb_multi_list0
 
-def wcb_multi_list1(source, alldata, ps, current_cols1, **kwargs):
+def wcb_multi_list1(source, alldata, ps, **kwargs):
     def cb_multi_list1 (attrname, old, new):
-        nonlocal source, current_cols1
+        nonlocal source
         # add respective columns to datasource (if not existant yet)
         newcols = list(set(new)-set(source.data.keys()))
         # add predictions too
@@ -122,22 +68,25 @@ def wcb_multi_list1(source, alldata, ps, current_cols1, **kwargs):
         print("adding cols: \n")
         print(newcols)
         for nc in newcols:
-            source.data[nc] = alldata[nc]    # add all cols from this list to multichoice1.value & plot 1 redraw
-        current_cols1 = new
-        draw_ts(p=ps[1], current_cols=current_cols1 ,source=source, ptype="bar",**kwargs)
+            source.data[nc] = alldata[nc]
+        #redraw
+        draw_ts(p=ps[1], current_cols=new ,source=source, ptype="bar",**kwargs)
     return cb_multi_list1
 
 # MOVED TO MAINSCRIPT BECAUSE DONT CHANGE GLOBAL OBJECT
-# def cb_clearbutton0(multi_list0):
-#     # empty multilist and replot only multicolumn selections
-#     multi_list0.value = []
-#     # is this really needed? shoud trigger .on_change cb
-#     #draw_ts(ps[0], cols=[],source,COLORS, ptype="circle")
+def wcb_clearbutton0(multi_list0):
+    def cb_clearbutton0():
+        nonlocal multi_list0
+        # empty multilist and replot only multicolumn selections
+        multi_list0.value = []
+    return cb_clearbutton0
 
-# def cb_clearbutton1(multi_list1):
-#     # empty multilist and replot only multicolumn selections
-#     multi_list1.value = []
-#     #draw_ts(ps[1], multi_choice1.value ,source,COLORS, ptype="bar")
+def wcb_clearbutton1(multi_list1):
+    def cb_clearbutton1():
+        nonlocal multi_list1
+        # empty multilist and replot only multicolumn selections
+        multi_list1.value = []
+    return cb_clearbutton1
 
 def wcb_selection_change(label_buttons, button_delete_sel_labels, **kwargs):
     def cb_selection_change (attrname, old, new):
@@ -191,6 +140,3 @@ def wcb_selection_change(label_buttons, button_delete_sel_labels, **kwargs):
 #     print(data.DateTime[:1])### HIER HAT ER IMMER NOCH APRIL, aber irgwie nur in dieser Funktion
 #     data.to_feather(FILES[ym])
 #     print("saved data")
-
-
-

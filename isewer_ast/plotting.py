@@ -30,7 +30,7 @@ def create_colors(all_cols):
 
 
 ### PLOTTING FUNCTIONS
-def draw_ts(source, COLORS,p, current_cols, ptype, current_voi,**kwargs):
+def draw_ts(source, COLORS,p, current_cols, ptype, select_voi,**kwargs):
     # Plots either one of the timeseries plots
     # ptype: "circle" or "bar", plotting type
     plotcols = current_cols + ["pr_"+c for c in current_cols]
@@ -45,7 +45,7 @@ def draw_ts(source, COLORS,p, current_cols, ptype, current_voi,**kwargs):
             select_color = COLORS[col]
             size=3
             # if col = voi enable changing appearance of points
-            if col == current_voi:
+            if col == select_voi.value:
                 nonselect_alpha = 1
                 select_color = "orange"
                 size = 3
@@ -60,11 +60,11 @@ def draw_ts(source, COLORS,p, current_cols, ptype, current_voi,**kwargs):
             p.vbar(x='DateTime', top=col, width=2,
                 fill_color=COLORS[col], fill_alpha=1, line_color=COLORS[col], legend_label=col, name=col, source=source, nonselection_fill_alpha=1)# somehow non-selection alpha does not work
 
-def draw_labels(pl, source, current_voi, **kwargs):
+def draw_labels(pl, source, select_voi, **kwargs):
     if pl.legend: 
         pl.legend.items = []
     pl.renderers.clear()
-    var = "pr_"+current_voi+"_Label"
+    var = "pr_"+select_voi.value +"_Label"
     cmap = linear_cmap(field_name=var, palette=LABELCOLORS, low=0.1, high=1)
     pl.rect(x='DateTime', y=var, width=80000, height=4, source=source,#size=16
         fill_alpha=1, fill_color=cmap,line_color=None,#,#"color"
@@ -77,9 +77,9 @@ def draw_labels(pl, source, current_voi, **kwargs):
         border_line_color=None)
     pl.add_layout(legend)
 
-def plot_all(ps, pl, current_cols0, current_cols1, **kwargs):
+def plot_all(ps, pl, multi_list0, multi_list1,**kwargs):
     # observed cols + predicted ones
-    cols = [current_cols0, current_cols1]
+    cols = [multi_list0.value, multi_list1.value]
     PTYPES = ["circle","bar"]
     for p_i in range(len(ps)):
         draw_ts(p=ps[p_i], current_cols= cols[p_i], ptype=PTYPES[p_i], **kwargs)

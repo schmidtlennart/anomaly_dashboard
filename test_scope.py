@@ -32,3 +32,22 @@ print(a) # 22
 
 add_mutable()
 print(a) # 23
+
+
+# create test object
+import pandas as pd
+class Test:
+    pass
+
+Test.a = 21
+Test.b = pd.DataFrame([1,2,3,4,5])
+
+
+Test.b.mean()
+
+from isewer_ast.callbacks import testcb
+
+testcb(Test)
+
+Test.a
+
