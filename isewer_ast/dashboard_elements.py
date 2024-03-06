@@ -32,7 +32,7 @@ def create_plot_objects(alldata, select_voi, source):
     #slider.toolbar.active_multi = range_tool
     return ps, pl, slider
 
-def create_widgets(FILES, cols):
+def create_widgets(FILES, cols, anomalies):
     # Set up widgets
     # Selector: Year/Month
     select_ym = Select(title="Year/Month", value=INITIAL_FILE, options=list(FILES.keys()))#value=list(FILES.keys())[0]
@@ -42,7 +42,10 @@ def create_widgets(FILES, cols):
     multi_list0 =  MultiSelect(options=sorted(cols), value=INITIAL_COLS0, title="Strg+Click to deselect", size=23, width=MULTI_LIST_WIDTH)
     # Additional variables plot 2
     multi_list1 =  MultiSelect(options=sorted(cols), value=INITIAL_COLS1, size=23, width=MULTI_LIST_WIDTH)
-    return select_ym,select_voi, multi_list0, multi_list1
+    # Anomalies
+    multi_list_ae = MultiSelect(options=anomalies, value=[], size=23, width=MULTI_LIST_WIDTH2)
+
+    return select_ym,select_voi, multi_list0, multi_list1, multi_list_ae
 
 def create_buttons():
     # Emptying multilist0

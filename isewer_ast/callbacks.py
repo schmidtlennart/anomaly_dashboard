@@ -13,6 +13,7 @@ def wcb_select_voi(source, alldata, multi_list0, **kwargs):
     def cb_select_voi(attrname, old, new):
         nonlocal source, multi_list0
         # if not yet in dataset, load original data, add predictions and labels
+        print(f"CHANGING VOI TO {new}")
         if new not in source.data.keys():
             newcols = [new] + ["pr_"+new] + ["pr_"+new+"_Label"]
             print("adding cols: \n")
@@ -21,13 +22,14 @@ def wcb_select_voi(source, alldata, multi_list0, **kwargs):
                 source.data[nc] = alldata[nc]
         multi_list0.value = multi_list0.value + [new] #triggers draw_ts
         #redraw labels
+        print("REDRAWING LABELS")
         draw_labels(source=source,**kwargs)
     return cb_select_voi
 
-def wcb_new_data(FILES, FILES_PR, source, multi_list0, multi_list1, alldata, allcols,ps,slider, **kwargs):
-    def cb_new_data(attrname, old, new):
+def wcb_select_ym(FILES, FILES_PR, source, multi_list0, multi_list1, alldata, allcols,ps,slider, **kwargs):
+    def cb_select_ym(attrname, old, new):
         nonlocal FILES, FILES_PR, source, multi_list0, multi_list1,alldata, allcols, ps, slider
-        print("updating data..")
+        print(f"CHANGING TO YM {new},updating data..")
         current_cols = [multi_list0.value, multi_list1.value]
         # overwriting global objects
         source, alldata, allcols = create_data_source(FILES, FILES_PR, new, current_cols)
@@ -36,10 +38,11 @@ def wcb_new_data(FILES, FILES_PR, source, multi_list0, multi_list1, alldata, all
         ps[0].x_range.update(start=alldata.DateTime[0], end = alldata.DateTime[10000])
         slider.x_range.update(start=alldata.DateTime.iloc[0], end = alldata.DateTime.iloc[-1])
         source.selected.indices = []
+        print("PLOTTING ALL")
         plot_all(ps = ps, source=source, multi_list0=multi_list0, multi_list1=multi_list1, **kwargs)
         print("new head indices")
         print(source.data["DateTime"][:1])
-    return cb_new_data
+    return cb_select_ym
 
 
 def wcb_multi_list0(source, alldata, ps, **kwargs):
@@ -47,6 +50,7 @@ def wcb_multi_list0(source, alldata, ps, **kwargs):
         # inside closure, variables from parent scope (i.e. wrapper function) are read-only unless explicitly declared nonlocal
         # so set as nonlocal as I do want to change them in global scope
         nonlocal source
+        print("UPDATING MULTILIST0 & REPLOTTING")
         # add respective columns to datasource
         newcols = list(set(new)-set(source.data.keys()))
         # add predictions too
@@ -61,6 +65,7 @@ def wcb_multi_list0(source, alldata, ps, **kwargs):
 def wcb_multi_list1(source, alldata, ps, **kwargs):
     def cb_multi_list1 (attrname, old, new):
         nonlocal source
+        print("UPDATING MULTILIST1 & REPLOTTING")
         # add respective columns to datasource (if not existant yet)
         newcols = list(set(new)-set(source.data.keys()))
         # add predictions too
@@ -73,7 +78,24 @@ def wcb_multi_list1(source, alldata, ps, **kwargs):
         draw_ts(p=ps[1], current_cols=new ,source=source, ptype="bar",**kwargs)
     return cb_multi_list1
 
-# MOVED TO MAINSCRIPT BECAUSE DONT CHANGE GLOBAL OBJECT
+def wcb_multi_list_ae(anomalies_df, select_voi, select_ym, ps, **kwargs):
+    def cb_multi_list_ae(attrname, old, new):
+        nonlocal anomalies_df
+        print("UPDATING MULTILIST_AE")
+        print(new)
+        event = anomalies_df.loc[anomalies_df["multi"].isin(new), :]
+        print(event)
+        # update select_ym and select_voi        
+        if event["variable"].to_list() != select_voi.value:
+            select_voi.value = str(event["variable"].iloc[0])# also triggers redraw (...)
+        if event["Y_M"].to_list() != select_ym.value:
+            select_ym.value = str(event["Y_M"].iloc[0])# triggers redraw
+
+        # update xlim of first plot (rest follows)
+        ps[0].x_range.update(start=event["start"].iloc[0], end = event["end"].iloc[0])
+    return cb_multi_list_ae
+
+
 def wcb_clearbutton0(multi_list0):
     def cb_clearbutton0():
         nonlocal multi_list0
