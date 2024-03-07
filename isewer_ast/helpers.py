@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from bokeh.models import ColumnDataSource
 
-from isewer_ast.constants import PATH_AE_ANOMALIES, N_AE_ANOMALIES
+from isewer_ast.constants import PATH_AE_ANOMALIES, N_AE_ANOMALIES, FILTER_ANOMALIES
 
 def get_filenames(dir):
     # Create dict of input file paths
@@ -61,11 +61,11 @@ def create_data_source(FILES, FILES_PR, file, current_cols):
 def load_anomalies():
     # load ae-anomalies
     ae_event_df = pd.read_feather(PATH_AE_ANOMALIES).sort_values(by="length", ascending=False).head(N_AE_ANOMALIES)
-    
-    # filter for niveau, not at NORD or SK
-    mask = (ae_event_df["variable"].str.contains("Niveau")) & (~ae_event_df["variable"].str.contains("Nord|SK"))
-    #ae_event_df = ae_event_df.loc[ae_event_df["variable"].str.contains("Niveau"),:]
-    ae_event_df = ae_event_df.loc[mask,:]
+    if FILTER_ANOMALIES:
+        # filter for niveau, not at NORD or SK
+        mask = (ae_event_df["variable"].str.contains("Niveau")) & (~ae_event_df["variable"].str.contains("Nord|SK"))
+        #ae_event_df = ae_event_df.loc[ae_event_df["variable"].str.contains("Niveau"),:]
+        ae_event_df = ae_event_df.loc[mask,:]
     # add +- 2d to start and end
     ae_event_df["start"] = ae_event_df["start"] - pd.Timedelta(days=2)
     ae_event_df["end"] = ae_event_df["end"] + pd.Timedelta(days=2)

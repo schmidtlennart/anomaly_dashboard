@@ -9,7 +9,7 @@ INITIAL_COLS1 = []#"FSR_Rückwärts_RÜ_Hindenburgstraße"
 
 Z_THRESHOLD = 20# Zscore threshold
 N_AE_ANOMALIES = 200#top n in anomaly length
-
+FILTER_ANOMALIES = False# filter for niveau, not at NORD or SK
 
 # different to encoding from labelling (nan, 0, 1), here nan, 0.1:sensor anomaly, 0.2:system anomaly, 0.3:other
 # classifications only hold na/0/1 but are recoded upon load
