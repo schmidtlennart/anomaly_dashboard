@@ -8,7 +8,7 @@ INITIAL_COLS0 = ["Niveau_RÜ_BerlinerAllee"] + [INITIAL_VOI]
 INITIAL_COLS1 = []#"FSR_Rückwärts_RÜ_Hindenburgstraße"
 
 Z_THRESHOLD = 20# Zscore threshold
-N_AE_ANOMALIES = 50#top n in anomaly length
+N_AE_ANOMALIES = 200#top n in anomaly length
 
 
 # different to encoding from labelling (nan, 0, 1), here nan, 0.1:sensor anomaly, 0.2:system anomaly, 0.3:other

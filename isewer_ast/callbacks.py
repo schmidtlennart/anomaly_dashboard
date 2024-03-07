@@ -20,7 +20,7 @@ def wcb_select_voi(source, alldata, multi_list0, **kwargs):
             print(newcols)
             for nc in newcols:
                 source.data[nc] = alldata[nc]
-        multi_list0.value = multi_list0.value + [new] #triggers draw_ts
+        multi_list0.value = [new] #triggers draw_ts
         #redraw labels
         print("REDRAWING LABELS")
         draw_labels(source=source,**kwargs)
@@ -35,7 +35,7 @@ def wcb_select_ym(FILES, FILES_PR, source, multi_list0, multi_list1, alldata, al
         source, alldata, allcols = create_data_source(FILES, FILES_PR, new, current_cols)
 
         # update xlim of first plot (rest follows)
-        ps[0].x_range.update(start=alldata.DateTime[0], end = alldata.DateTime[10000])
+        ps[0].x_range.update(start=alldata.DateTime[0], end = alldata.DateTime[5000])
         slider.x_range.update(start=alldata.DateTime.iloc[0], end = alldata.DateTime.iloc[-1])
         source.selected.indices = []
         print("PLOTTING ALL")

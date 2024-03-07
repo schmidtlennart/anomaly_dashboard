@@ -58,9 +58,14 @@ def create_data_source(FILES, FILES_PR, file, current_cols):
     # return data source, alldata (i.e. data, pr_data and pr_labels) and all data columns (for col selection so withour _pr or _Label)
     return source, alldata, data.columns.to_list()
 
-def load_anomalies(a_path):
+def load_anomalies():
     # load ae-anomalies
-    ae_event_df = pd.read_feather(a_path).sort_values(by="length", ascending=False).head(N_AE_ANOMALIES)
+    ae_event_df = pd.read_feather(PATH_AE_ANOMALIES).sort_values(by="length", ascending=False).head(N_AE_ANOMALIES)
+    
+    # filter for niveau, not at NORD or SK
+    mask = (ae_event_df["variable"].str.contains("Niveau")) & (~ae_event_df["variable"].str.contains("Nord|SK"))
+    #ae_event_df = ae_event_df.loc[ae_event_df["variable"].str.contains("Niveau"),:]
+    ae_event_df = ae_event_df.loc[mask,:]
     # add +- 2d to start and end
     ae_event_df["start"] = ae_event_df["start"] - pd.Timedelta(days=2)
     ae_event_df["end"] = ae_event_df["end"] + pd.Timedelta(days=2)
