@@ -34,6 +34,7 @@ if "ftp" in sys.argv:
     DATADIR = "/data/isewer/data/011_split_by_year_month_ftp/by_month/"
     DATADIR_CL = "/data/isewer/data/classifications_ftp/by_year_month/by_month/"
     PATH_AE_ANOMALIES = f"/home/schmidle/code/isewer/anomaly_detection/results/010_process_daily_files/ae_event_df_zthresh{Z_THRESHOLD}_ftp.feather"
+    PATH_AE_ANOMALIES_MANUAL = f"/home/schmidle/code/isewer/anomaly_detection/results/003_AE_classifications/manual_labels_event_df.feather"
     INITIAL_FILE = "2023_12"
     print("-------------------FTP DATA-------------------")
 else:    
