@@ -13,7 +13,6 @@ FILTER_ANOMALIES = False# filter for niveau, not at NORD or SK
 
 # different to encoding from labelling (nan, 0, 1), here nan, 0.5=manual labels, 1=ae label, 1.5 True Positives
 # classifications only hold na/0/1 but are recoded upon load
-# Check Label-Plot ylimits if including 0.1-0.3
 LABELS = ["Manual", "AE Anomaly","True Positive", ]
 LABELCOLORS = ["lightblue", "darkred", "darkgreen"]
 
