@@ -26,11 +26,12 @@ def wcb_select_voi(source, alldata, multi_list0, **kwargs):
         draw_labels(source=source,**kwargs)
     return cb_select_voi
 
-def wcb_select_ym(FILES, FILES_PR, source, multi_list0, multi_list1, alldata, allcols,ps,slider, **kwargs):
+def wcb_select_ym(FILES, FILES_PR, source, multi_list0, multi_list1, alldata, allcols,ps,slider,select_voi, **kwargs):
     def cb_select_ym(attrname, old, new):
-        nonlocal FILES, FILES_PR, source, multi_list0, multi_list1,alldata, allcols, ps, slider
+        nonlocal FILES, FILES_PR, source, multi_list0, multi_list1,alldata, allcols, ps, slider,select_voi
         print(f"CHANGING TO YM {new},updating data..")
-        current_cols = [multi_list0.value, multi_list1.value]
+        # Assuming multi_list0.value, multi_list1.value, select_voi.value are lists
+        current_cols = list(set(multi_list0.value + multi_list1.value + [select_voi.value]))
         # overwriting global objects
         source, alldata, allcols = create_data_source(FILES, FILES_PR, new, current_cols)
 
@@ -39,7 +40,7 @@ def wcb_select_ym(FILES, FILES_PR, source, multi_list0, multi_list1, alldata, al
         slider.x_range.update(start=alldata.DateTime.iloc[0], end = alldata.DateTime.iloc[-1])
         source.selected.indices = []
         print("PLOTTING ALL")
-        plot_all(ps = ps, source=source, multi_list0=multi_list0, multi_list1=multi_list1, **kwargs)
+        plot_all(ps = ps, source=source, multi_list0=multi_list0, multi_list1=multi_list1,select_voi=select_voi, **kwargs)
         print("new head indices")
         print(source.data["DateTime"][:1])
     return cb_select_ym
@@ -55,11 +56,14 @@ def wcb_multi_list0(source, alldata, ps, **kwargs):
         newcols = list(set(new)-set(source.data.keys()))
         # add predictions too
         newcols = newcols + ["pr_"+c for c in newcols]
+        print(f"Multilist selection: {new}")
         print("adding cols: \n")
         print(newcols)
         for nc in newcols:
             source.data[nc] = alldata[nc]
         draw_ts(p=ps[0], current_cols=new ,source=source, ptype="circle", **kwargs)
+        print("DATA SOURCE:")
+        print(pd.DataFrame(source.data).head())
     return cb_multi_list0
 
 def wcb_multi_list1(source, alldata, ps, **kwargs):
@@ -78,6 +82,7 @@ def wcb_multi_list1(source, alldata, ps, **kwargs):
         draw_ts(p=ps[1], current_cols=new ,source=source, ptype="bar",**kwargs)
     return cb_multi_list1
 
+# Multlist for anomaly events from ae
 def wcb_multi_list_ae(anomalies_df, select_voi, select_ym, ps, **kwargs):
     def cb_multi_list_ae(attrname, old, new):
         nonlocal anomalies_df
@@ -87,14 +92,31 @@ def wcb_multi_list_ae(anomalies_df, select_voi, select_ym, ps, **kwargs):
         print(event)
         # update select_ym and select_voi        
         if event["variable"].to_list() != select_voi.value:
-            select_voi.value = str(event["variable"].iloc[0])# also triggers redraw (...)
+            select_voi.value = str(event["variable"].iloc[0])# triggers redraw (...)
         if event["Y_M"].to_list() != select_ym.value:
-            select_ym.value = str(event["Y_M"].iloc[0])# triggers redraw
+            select_ym.value = str(event["Y_M"].iloc[0])# also triggers redraw
 
         # update xlim of first plot (rest follows)
         ps[0].x_range.update(start=event["start"].iloc[0], end = event["end"].iloc[0])
     return cb_multi_list_ae
 
+# Multlist for manual labels
+def wcb_multi_list_manual(anomalies_df_manual, select_voi, select_ym, ps, **kwargs):
+    def cb_multi_list_manual(attrname, old, new):
+        nonlocal anomalies_df_manual
+        print("UPDATING MULTILIST_MANUAL")
+        print(new)
+        event = anomalies_df_manual.loc[anomalies_df_manual["multi"].isin(new), :]
+        print(event)
+        # update select_ym and select_voi        
+        if event["variable"].to_list() != select_voi.value:
+            select_voi.value = str(event["variable"].iloc[0])# triggers redraw (...)
+        if event["Y_M"].to_list() != select_ym.value:
+            select_ym.value = str(event["Y_M"].iloc[0])# also triggers redraw
+
+        # update xlim of first plot (rest follows)
+        ps[0].x_range.update(start=event["start"].iloc[0], end = event["end"].iloc[0])
+    return cb_multi_list_manual
 
 def wcb_clearbutton0(multi_list0):
     def cb_clearbutton0():

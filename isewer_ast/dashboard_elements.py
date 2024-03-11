@@ -11,7 +11,7 @@ def create_plot_objects(alldata, select_voi, source):
     ps[0] = figure(width=WIDTH, height=HEIGHT, x_axis_type="datetime", title='',tools=TOOLS0,x_range=(xleft,xright), active_drag="pan", active_scroll="ywheel_zoom")#, output_backend="webgl"#webgl=GPU acceleration, causes problems with vbar
     ps[1] = figure(width=WIDTH, height=HEIGHT, x_axis_type="datetime", title='',tools=TOOLS1, x_range=ps[0].x_range)
     # holds labels
-    pl = figure(width=WIDTH, height=HEIGHT1, x_axis_type="datetime", title='',tools="box_select",toolbar_location=None, y_axis_type=None,x_range=ps[0].x_range, y_range=(0,1), active_drag="box_select")
+    pl = figure(width=WIDTH, height=HEIGHT1, x_axis_type="datetime", title='',tools="box_select",toolbar_location=None, y_axis_type=None,x_range=ps[0].x_range, y_range=(0.5,2), active_drag="box_select")
     pl.ygrid.grid_line_color = None
 
     # Additional tools (does not work for barchart, so only ps0)
@@ -19,8 +19,8 @@ def create_plot_objects(alldata, select_voi, source):
     hover = HoverTool(tooltips=tooltips, mode='mouse', formatters={'@DateTime': 'datetime'})
     ps[0].add_tools(hover)
 
-    xleft_s = alldata.DateTime.iloc[0]
-    xright_s = alldata.DateTime.iloc[-1]
+    xleft_s = source.data["DateTime"][0]
+    xright_s = source.data["DateTime"][-1]
     # Selection Bar at the bottom
     slider = figure(height=HEIGHT1, width=WIDTH, x_axis_type="datetime", title="", y_axis_type=None, tools="", toolbar_location=None, x_range=(xleft_s, xright_s))#
     range_tool = RangeTool(x_range=ps[0].x_range)#
@@ -32,7 +32,7 @@ def create_plot_objects(alldata, select_voi, source):
     #slider.toolbar.active_multi = range_tool
     return ps, pl, slider
 
-def create_widgets(FILES, cols, anomalies):
+def create_widgets(FILES, cols, anomalies, anomalies_manual):
     # Set up widgets
     # Selector: Year/Month
     select_ym = Select(title="Year/Month", value=INITIAL_FILE, options=list(FILES.keys()))#value=list(FILES.keys())[0]
@@ -43,9 +43,10 @@ def create_widgets(FILES, cols, anomalies):
     # Additional variables plot 2
     multi_list1 =  MultiSelect(options=sorted(cols), value=INITIAL_COLS1, size=23, width=MULTI_LIST_WIDTH)
     # Anomalies
-    multi_list_ae = MultiSelect(options=anomalies, value=[], size=23, width=MULTI_LIST_WIDTH2)
-
-    return select_ym,select_voi, multi_list0, multi_list1, multi_list_ae
+    multi_list_ae = MultiSelect(options=anomalies, value=[], size=23, width=MULTI_LIST_WIDTH2, title="Autoencoder Anomalies")
+    # Manual labels
+    multi_list_manual = MultiSelect(options=anomalies_manual, value=[], size=23, width=MULTI_LIST_WIDTH2, title="Manual Anomalies")
+    return select_ym,select_voi, multi_list0, multi_list1, multi_list_ae, multi_list_manual
 
 def create_buttons():
     # Emptying multilist0

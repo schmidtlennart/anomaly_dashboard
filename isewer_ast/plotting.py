@@ -38,9 +38,15 @@ def draw_ts(source, COLORS,p, current_cols, ptype, select_voi,**kwargs):
         p.legend.items = []
     #clear plot
     p.renderers = []#.clear()
+    # # record all value min+max
+    # y_mins = []
+    # y_maxs = []
     # top plot: circles
     if ptype == "circle":
+        print("plotting circles")
         for col in plotcols:
+            # y_mins.append(np.nanmin(source.data[col]))
+            # y_maxs.append(np.nanmax(source.data[col]))
             nonselect_alpha = 1
             select_color = COLORS[col]
             size=3
@@ -56,16 +62,26 @@ def draw_ts(source, COLORS,p, current_cols, ptype, select_voi,**kwargs):
                             selection_color=select_color)
     #bottom plot: bars
     if ptype == "bar":
+        print("plotting bars")        
         for col in plotcols:
+            # y_mins.append(np.nanmin(source.data[col]))
+            # y_maxs.append(np.nanmax(source.data[col]))
             p.vbar(x='DateTime', top=col, width=2,
                 fill_color=COLORS[col], fill_alpha=1, line_color=COLORS[col], legend_label=col, name=col, source=source, nonselection_fill_alpha=1)# somehow non-selection alpha does not work
 
+    # y_min = min(y_mins)
+    # y_max = max(y_maxs)
+    # if y_min == y_max: #can occur and then there is no plot any more
+    #     y_max = y_min+1
+    # p.y_range.update(start=y_min, end=y_max)
+        
+    #p.y_range.update(start=min(y_mins), end=max(y_maxs))
 def draw_labels(pl, source, select_voi, **kwargs):
     if pl.legend: 
         pl.legend.items = []
     pl.renderers.clear()
     var = "pr_"+select_voi.value +"_Label"
-    cmap = linear_cmap(field_name=var, palette=LABELCOLORS, low=0.1, high=1)
+    cmap = linear_cmap(field_name=var, palette=LABELCOLORS, low=0.5, high=2)
     pl.rect(x='DateTime', y=var, width=80000, height=4, source=source,#size=16
         fill_alpha=1, fill_color=cmap,line_color=None,#,#"color"
                 selection_color="orange")

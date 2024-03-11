@@ -10,8 +10,9 @@
 # update slider inside drawing functions as well
 
 import pandas as pd
+# pd n columns shown
+pd.set_option('display.max_columns', 500)
 import numpy as np
-import sys
 from bokeh.plotting import curdoc
 from bokeh.layouts import column, row
 from bokeh.models import Spacer
@@ -37,7 +38,7 @@ COLORS = create_colors(alldata.columns.to_list())
 #d = anomalies_df.loc[anomalies_df.loc[:,"variable"]=="Niveau_Radar_RÜ_Sundgauallee",:]
 
 ################## WIDGETS & BUTTONS #############################
-select_ym, select_voi, multi_list0, multi_list1, multi_list_ae = create_widgets(FILES, allcols, anomalies_df["multi"].to_list())
+select_ym, select_voi, multi_list0, multi_list1, multi_list_ae, multi_list_manual = create_widgets(FILES, allcols, anomalies_df["multi"].to_list(), anomalies_df_manual["multi"].to_list())
 clearbutton0, clearbutton1, label_buttons, button_delete_sel_labels, button_delete_all_labels, button_save_all_labels = create_buttons()
 
 ################## PLOTS #############################
@@ -46,7 +47,7 @@ ps, pl, slider = create_plot_objects(alldata, select_voi, source)
 ################## CALLBACKS ################## 
 # All objects needed in callbacks
 # TO DO: Turn into class object that I can simply pass around (=only one kw argument)
-args = {"FILES":FILES, "FILES_PR":FILES_PR, "source": source, "alldata":alldata, "allcols":allcols, "COLORS": COLORS, "ps": ps, "pl":pl, "slider":slider,"select_voi":select_voi, "multi_list0":multi_list0, "multi_list1":multi_list1, "multi_list_ae":multi_list_ae, "anomalies_df":anomalies_df, "select_ym":select_ym}
+args = {"FILES":FILES, "FILES_PR":FILES_PR, "source": source, "alldata":alldata, "allcols":allcols, "COLORS": COLORS, "ps": ps, "pl":pl, "slider":slider,"select_voi":select_voi, "multi_list0":multi_list0, "multi_list1":multi_list1, "multi_list_ae":multi_list_ae, "multi_list_manual":multi_list_manual, "anomalies_df":anomalies_df, "anomalies_df_manual":anomalies_df_manual,"select_ym":select_ym}
 
 # Labelling actions only allowed if data is selected
 source.selected.on_change('indices', wcb_selection_change(label_buttons, button_delete_sel_labels))
@@ -56,6 +57,8 @@ select_voi.on_change("value", wcb_select_voi(**args))#change of Variable of Inte
 multi_list0.on_change("value", wcb_multi_list0(**args))# change of selection in multilist0
 multi_list1.on_change("value", wcb_multi_list1(**args))# change of selection in multilist1
 multi_list_ae.on_change("value", wcb_multi_list_ae(**args))# change of anomaly event
+multi_list_manual.on_change("value", wcb_multi_list_manual(**args))# change of anomaly event
+
 # Button Callbacks
 clearbutton0.on_event('button_click', wcb_clearbutton0(multi_list0=multi_list0))
 clearbutton1.on_event('button_click', wcb_clearbutton1(multi_list1=multi_list1))
@@ -71,8 +74,9 @@ row0 = row(select_ym,select_voi)
 #row01 = row(label_buttons, button_delete_sel_labels)
 row1 = row(column(multi_list0, clearbutton0),column(ps[0],pl))# button_delete_all_labels, button_save_all_labels
 row2 = row(column(multi_list1, clearbutton1),column(ps[1]))
-row2_1 = row(column (row1, row2), column(multi_list_ae))
+row2_1 = row(row1, multi_list_ae)
+row2_2 = row(row2, multi_list_manual)
 row3 = row(Spacer(width=MULTI_LIST_WIDTH),slider)
-layout=column(row0,row2_1,row3)
+layout=column(row0, row2_1,row2_2,row3)
 curdoc().add_root(layout)
 curdoc().title = "i-SEWER Classifications"

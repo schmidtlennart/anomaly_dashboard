@@ -53,6 +53,7 @@ def create_data_source(FILES, FILES_PR, file, current_cols):
     alldata = pd.concat([data,data_pr_plot], axis=1)
 
     load_cols = ["DateTime"] + columns_to_pr_label(current_cols)
+    print(f"loading columns: {load_cols}")
     source = ColumnDataSource(alldata.loc[:,load_cols])
     print("(re-)created datasource")
     # return data source, alldata (i.e. data, pr_data and pr_labels) and all data columns (for col selection so withour _pr or _Label)
@@ -71,6 +72,8 @@ def load_anomalies(path,filter=False):
     ae_event_df["end"] = ae_event_df["end"] + pd.Timedelta(days=2)
     # add Y_M column
     ae_event_df["Y_M"] = ae_event_df["start"].dt.strftime("%Y_%m")
+    # if present remove "_Label" from variable
+    ae_event_df["variable"] = ae_event_df["variable"].str.replace("_Label","")
     # create string for mutliselect
     ae_event_df["multi"] = ""
     for i in ae_event_df.index.to_list():
