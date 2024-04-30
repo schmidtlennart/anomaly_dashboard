@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from bokeh.models import ColumnDataSource
 
-from isewer_ast.constants import PATH_AE_ANOMALIES, N_AE_ANOMALIES, FILTER_ANOMALIES
+from isewer_ast.constants import PATH_AE_ANOMALIES, N_AE_ANOMALIES
 
 def get_filenames(dir):
     # Create dict of input file paths
@@ -59,7 +59,7 @@ def create_data_source(FILES, FILES_PR, file, current_cols):
     # return data source, alldata (i.e. data, pr_data and pr_labels) and all data columns (for col selection so withour _pr or _Label)
     return source, alldata, data.columns.to_list()
 
-def load_anomalies(path,filter=False):
+def load_anomalies(path,filter=False):# filter: filter for niveau, data not at NORD or SK
     # load ae-anomalies
     ae_event_df = pd.read_feather(path).sort_values(by="length", ascending=False).head(N_AE_ANOMALIES)
     if filter:

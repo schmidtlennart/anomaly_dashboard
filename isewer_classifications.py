@@ -29,7 +29,7 @@ from isewer_ast.dashboard_elements import create_plot_objects, create_widgets, c
 FILES, FILES_PR = [get_filenames(f) for f in [DATADIR, DATADIR_CL]]
 
 source, alldata, allcols = create_data_source(FILES, FILES_PR, INITIAL_FILE, [INITIAL_COLS0, INITIAL_COLS1])
-anomalies_df = load_anomalies(PATH_AE_ANOMALIES, filter=True)
+anomalies_df = load_anomalies(PATH_AE_ANOMALIES, filter=False)
 anomalies_df_manual = load_anomalies(PATH_AE_ANOMALIES_MANUAL, filter=False)
 # create colors for all columns
 COLORS = create_colors(alldata.columns.to_list())
