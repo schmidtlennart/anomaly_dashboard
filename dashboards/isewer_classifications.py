@@ -163,12 +163,12 @@ def cb_multi_list1 (attrname, old, new):
 def cb_clearbutton0():
     # empty multilist and replot only multicolumn selections
     multi_list0.value = []
-    draw_ts(ps[0], multi_choice0.value ,source,COLORS, ptype="circle")
+    #draw_ts(ps[0], multi_choice0.value ,source,COLORS, ptype="circle")
 
 def cb_clearbutton1():
     # empty multilist and replot only multicolumn selections
     multi_list1.value = []
-    draw_ts(ps[1], multi_choice1.value ,source,COLORS, ptype="bar")
+    #draw_ts(ps[1], multi_choice1.value ,source,COLORS, ptype="bar")
 
 def cb_selection_change (attrname, old, new):
         label_buttons.disabled=False
@@ -269,7 +269,7 @@ print(INITIALCOLS_PR)
 ### merge predictions and observed data
 alldata = pd.concat([data,data_pr_plot], axis=1)
 
-source = ColumnDataSource(alldata.loc[:,INITIALCOLS+INITIALCOLS_PR])
+source = ColumnDataSource(alldata)
 print("created datasource")
 # save column names
 all_cols = data.columns.to_list() + data_pr.columns.to_list()

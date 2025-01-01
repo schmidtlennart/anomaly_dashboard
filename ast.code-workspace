@@ -1,15 +1,19 @@
 {
 	"folders": [
 		{
-			"path": "/home/schmidle/code/anomaly_selection_tool"
+			"name": "anomaly_selection_tool",
+			"path": "."
 		},
 		{
+			"name": "isewer",
 			"path": "../../../../data/isewer"
 		},
 		{
+			"name": "kit_anomaly_selection_tool",
 			"path": "../kit_anomaly_selection_tool"
 		},
 		{
+			"name": "data",
 			"path": "../../../../data/isewer/data"
 		}
 	],
