@@ -1,6 +1,6 @@
 import os, random
 import numpy as np
-from bokeh.palettes import Turbo256
+from bokeh.palettes import Turbo256, viridis,Category20
 from bokeh.transform import linear_cmap
 
 from isewer_ast.constants import LABELS, LABELCOLORS
@@ -23,7 +23,9 @@ def create_colors(all_cols):
     np.random.seed(seed)  # to keep colors the same
     n_all_cols = len(all_cols)
     rand_seq = np.random.choice(n_all_cols, n_all_cols, replace=False)  # randomize colors to get distinguishable colors from continuous colormap
-    palette = Turbo256*4  # more than 256 variables
+    #palette = Turbo256#*4  # more than 256 variables
+    #palette = viridis(40)
+    palette = Category20[20]
     color_seq = [palette[r] for r in rand_seq]
     COLORS = dict(zip(all_cols, color_seq))
     return COLORS

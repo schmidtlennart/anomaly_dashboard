@@ -5,7 +5,8 @@ import sys
 INITIAL_VOI = "Niveau_RÜ_BerlinerAllee"
 # Inital Columns"
 INITIAL_COLS0 = ["Niveau_RÜ_BerlinerAllee"] + [INITIAL_VOI]
-INITIAL_COLS1 = ["Niederschlag_Hans_Bunte_Straße"]#"FSR_Rückwärts_RÜ_Hindenburgstraße"
+#INITIAL_COLS1 = ["Niederschlag_Hans_Bunte_Straße"]#"FSR_Rückwärts_RÜ_Hindenburgstraße"
+INITIAL_COLS1 = ["Entlastungsmenge_RÜB_Nord"]
 
 Z_THRESHOLD = 20# Zscore threshold
 N_AE_ANOMALIES = 200#top n in anomaly length
